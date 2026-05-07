@@ -125,6 +125,12 @@ tr:hover {
     background-color: #f5f9ff;
 }
 
+.deshabilitado {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
 /* ACCIONES */
 .acciones {
     display: flex;
@@ -275,19 +281,24 @@ tr:hover {
        ✏️
     </a>
 
-    <!-- NUEVO CONTRATO -->
+    <!-- boton NUEVO CONTRATO -->
     <a href="/nuevo_contrato/{{ proyecto[0] }}" 
    class="btn ver"
    title="Agregar contrato">
    📄
 </a>
 
-    <!-- VISITA -->
-    <a href="/nueva_visita/{{ proyecto[0] }}" 
-       class="btn editar"
-       title="Agregar visita">
-       📝
+    <!-- boton VISITA -->
+    {% if proyecto[6] %}
+    <a href="/nueva_visita/{{ proyecto[0] }}" class="btn visita" title="Registrar Visita">
+        📝
     </a>
+{% else %}
+    <button class="btn deshabilitado" disabled title="Proyecto sin contrato">
+        ⚠️
+    </button>
+{% endif %}
+
 
     <!-- VER VISITAS -->
     <a href="/visitas_proyecto/{{ proyecto[0] }}" 

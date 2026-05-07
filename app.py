@@ -31,14 +31,29 @@ def inicio():
             p.localidad, 
             p.inversion_autorizada,
             c.no_contrato,
-            COUNT(v.id_visita) as total_visitas
+            COUNT(v.id_visita) as total_visitas,
+
+            
+
         FROM proyectos p
         LEFT JOIN contratos c ON p.id_proyecto = c.id_proyecto
         LEFT JOIN visitas v ON c.id_contrato = v.id_contrato
-        WHERE p.nombre LIKE %s OR p.programa LIKE %s
-        GROUP BY p.id_proyecto
+
+        WHERE p.nombre LIKE %s 
+        OR p.programa LIKE %s
+
+        GROUP BY 
+            p.id_proyecto,
+            p.nombre,
+            p.programa,
+            p.un_ad,
+            p.localidad,
+            p.inversion_autorizada,
+            c.no_contrato
         """
+
         cursor.execute(query, (f"%{busqueda}%", f"%{busqueda}%"))
+
     else:
         cursor.execute("""
         SELECT 
@@ -49,16 +64,31 @@ def inicio():
             p.localidad, 
             p.inversion_autorizada,
             c.no_contrato,
-            COUNT(v.id_visita) as total_visitas
+            COUNT(v.id_visita) as total_visitas,
+
+            EXISTS(
+                SELECT 1
+                FROM contratos c2
+                WHERE c2.id_proyecto = p.id_proyecto
+            ) AS tiene_contrato
+
         FROM proyectos p
         LEFT JOIN contratos c ON p.id_proyecto = c.id_proyecto
         LEFT JOIN visitas v ON c.id_contrato = v.id_contrato
-        GROUP BY p.id_proyecto
+
+        GROUP BY 
+            p.id_proyecto,
+            p.nombre,
+            p.programa,
+            p.un_ad,
+            p.localidad,
+            p.inversion_autorizada,
+            c.no_contrato
         """)
 
     proyectos = cursor.fetchall()
 
-    # 🔹 MÉTRICAS (ANTES de cerrar conexión)
+    # 🔹 MÉTRICAS
     cursor.execute("SELECT COUNT(*) FROM proyectos")
     total_proyectos = cursor.fetchone()[0]
 
@@ -74,7 +104,9 @@ def inicio():
         FROM visitas
         GROUP BY DATE_FORMAT(fecha_visita, '%Y-%m')
     """)
+
     datos = cursor.fetchall()
+
     meses = [fila[0] for fila in datos]
     totales_visitas = [fila[1] for fila in datos]
 
@@ -84,11 +116,13 @@ def inicio():
         FROM proyectos 
         GROUP BY programa
     """)
+
     datos2 = cursor.fetchall()
+
     programas = [fila[0] for fila in datos2]
     totales_programas = [fila[1] for fila in datos2]
 
-    # Cerrar conexión
+    # 🔹 Cerrar conexión
     conexion.close()
 
     return render_template(
@@ -401,4 +435,4 @@ def login():
 # EJECUCIÓN
 # ------------------------
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)
