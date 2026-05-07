@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Historial de Visitas</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #eef2f7;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background-color: #1e88e5;
+            color: white;
+            padding: 10px;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:hover {
+            background-color: #f5f9ff;
+        }
+
+        .btn-volver {
+            display: inline-block;
+            margin-bottom: 15px;
+            padding: 8px 12px;
+            background-color: #555;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+
+</head>
+<body>
+
+<a href="/" class="btn-volver">⬅ Volver</a>
+
+<h1>📊 Historial de Visitas</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Proyecto</th>
+            <th>Contrato</th>
+            <th>Fecha</th>
+            <th>Supervisor</th>
+            <th>Residente</th>
+            <th>Observaciones</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for v in visitas %}
+        <tr>
+            <td>{{ v[0] }}</td>
+            <td>{{ v[1] }}</td>
+            <td>{{ v[2] }}</td>
+            <td>{{ v[3] }}</td>
+            <td>{{ v[4] }}</td>
+            <td>{{ v[5] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>

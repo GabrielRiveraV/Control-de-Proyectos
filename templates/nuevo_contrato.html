@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nuevo Contrato</title>
+
+    <style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #eef2f7;
+    margin: 0;
+}
+
+.container {
+    width: 40%;
+    margin: 40px auto;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #2c3e50;
+}
+
+label {
+    font-weight: bold;
+    display: block;
+    margin-top: 12px;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    transition: 0.2s;
+    font-size: 14px;
+}
+
+input:focus, select:focus {
+    border-color: #1e88e5;
+    outline: none;
+}
+
+/* PROYECTO BLOQUEADO */
+.proyecto-fijo {
+    background: #f4f6f9;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    margin-top: 5px;
+}
+
+/* BOTONES */
+.botones {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 10px 15px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+}
+
+.guardar {
+    background-color: #28a745;
+}
+
+.guardar:hover {
+    background-color: #218838;
+}
+
+.cancelar {
+    background-color: #e74c3c;
+}
+
+.cancelar:hover {
+    background-color: #c0392b;
+}
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="card">
+
+        <h2>📄 Registrar Contrato</h2>
+
+        <form action="/guardar_contrato" method="POST">
+
+            <!-- PROYECTO -->
+            <label>Proyecto:</label>
+
+            {% if proyecto_seleccionado %}
+                
+                <!-- Campo oculto (IMPORTANTÍSIMO) -->
+                <input type="hidden" name="id_proyecto" value="{{ proyecto_seleccionado[0] }}">
+
+                <!-- Visual -->
+                <div class="proyecto-fijo">
+                    📁 {{ proyecto_seleccionado[1] }}
+                </div>
+
+            {% else %}
+
+                <select name="id_proyecto" required>
+                    {% for proyecto in proyectos %}
+                        <option value="{{ proyecto[0] }}">
+                            {{ proyecto[1] }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+            {% endif %}
+
+            <!-- NO CONTRATO -->
+            <label>No. Contrato:</label>
+            <input type="text" name="no_contrato" placeholder="Ej. CO-12345" required>
+
+            <!-- FECHA -->
+            <label>Fecha:</label>
+            <input type="date" name="fecha" required>
+
+            <!-- CONTRATISTA -->
+            <label>Contratista:</label>
+            <input type="text" name="contratista" placeholder="Nombre del contratista" required>
+
+            <!-- MONTO -->
+            <label>Monto:</label>
+            <input type="number" name="monto" step="0.01" placeholder="Ej. 150000.50" required>
+
+            <!-- BOTONES -->
+            <div class="botones">
+                <button type="submit" class="btn guardar">💾 Guardar</button>
+                <a href="/" class="btn cancelar">Cancelar</a>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+</body>
+</html>

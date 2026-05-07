@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registrar Proyecto</title>
+
+    <style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #eef2f7;
+    margin: 0;
+}
+
+.container {
+    width: 40%;
+    margin: 40px auto;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #2c3e50;
+}
+
+label {
+    font-weight: bold;
+    display: block;
+    margin-top: 12px;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    transition: 0.2s;
+    font-size: 14px;
+}
+
+input:focus {
+    border-color: #1e88e5;
+    outline: none;
+}
+
+/* BOTONES */
+.botones {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 10px 15px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+}
+
+.guardar {
+    background-color: #28a745;
+}
+
+.guardar:hover {
+    background-color: #218838;
+}
+
+.cancelar {
+    background-color: #e74c3c;
+}
+
+.cancelar:hover {
+    background-color: #c0392b;
+}
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="card">
+
+        <h2>📁 Registrar Proyecto</h2>
+
+        <form action="/guardar_proyecto" method="POST">
+
+            <!-- NOMBRE -->
+            <label>Nombre del proyecto:</label>
+            <input type="text" name="nombre" placeholder="Ej. Pavimentación Calle Hidalgo" required>
+
+            <!-- PROGRAMA -->
+            <label>Programa:</label>
+            <input type="text" name="programa" placeholder="Ej. Infraestructura 2026" required>
+
+            <!-- UNIDAD -->
+            <label>Unidad Administrativa:</label>
+            <input type="text" name="un_ad" placeholder="Ej. Obras Públicas" required>
+
+            <!-- LOCALIDAD -->
+            <label>Localidad:</label>
+            <input type="text" name="localidad" placeholder="Ej. Puebla" required>
+
+            <!-- INVERSIÓN -->
+            <label>Inversión Autorizada:</label>
+            <input type="number" name="inversion" step="0.01" placeholder="Ej. 1500000.50" required>
+
+            <!-- BOTONES -->
+            <div class="botones">
+                <button type="submit" class="btn guardar">💾 Guardar</button>
+                <a href="/" class="btn cancelar">Cancelar</a>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+</body>
+</html>

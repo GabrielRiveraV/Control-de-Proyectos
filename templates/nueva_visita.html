@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nueva Visita</title>
+
+    <style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #eef2f7;
+    margin: 0;
+}
+
+.container {
+    width: 40%;
+    margin: 40px auto;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #2c3e50;
+}
+
+label {
+    font-weight: bold;
+    display: block;
+    margin-top: 12px;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    transition: 0.2s;
+    font-size: 14px;
+}
+
+input:focus, textarea:focus {
+    border-color: #1e88e5;
+    outline: none;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* CONTRATO BOX */
+.contrato-box {
+    background:#e8f4ff;
+    padding:10px;
+    border-radius:6px;
+    border:1px solid #b6d4fe;
+    margin-top:5px;
+    font-weight:bold;
+}
+
+/* ALERTA */
+.alerta {
+    background: #fdecea;
+    color: #c0392b;
+    padding: 10px;
+    border-radius: 6px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+/* BOTONES */
+.botones {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 10px 15px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+}
+
+.guardar {
+    background-color: #28a745;
+}
+
+.guardar:hover {
+    background-color: #218838;
+}
+
+.cancelar {
+    background-color: #e74c3c;
+}
+
+.cancelar:hover {
+    background-color: #c0392b;
+}
+
+.crear {
+    background-color: #1e88e5;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+.crear:hover {
+    background-color: #1565c0;
+}
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="card">
+
+        <h2>📝 Registrar Visita</h2>
+
+        <form action="/guardar_visita" method="POST">
+
+            <!-- CONTRATO -->
+            <label>Contrato:</label>
+
+            {% if contrato %}
+
+                <!-- 🔑 INPUT OCULTO (CLAVE) -->
+                <input type="hidden" name="id_contrato" value="{{ contrato[0] }}">
+
+                <div class="contrato-box">
+                    📄 {{ contrato[1] }}
+                </div>
+
+            {% else %}
+
+                <div class="alerta">
+                    ⚠️ Este proyecto no tiene contrato asignado
+                </div>
+
+                <a href="/nuevo_contrato" class="btn crear">
+                    ➕ Crear contrato
+                </a>
+
+            {% endif %}
+
+            <!-- CAMPOS -->
+            <label>Fecha:</label>
+            <input type="date" name="fecha" required>
+
+            <label>Supervisor:</label>
+            <input type="text" name="supervisor" placeholder="Nombre del supervisor" required>
+
+            <label>Residente de obra:</label>
+            <input type="text" name="residente" placeholder="Nombre del residente" required>
+
+            <label>Observaciones:</label>
+            <textarea name="observaciones" placeholder="Describe lo observado..."></textarea>
+
+            <!-- BOTONES -->
+            {% if contrato %}
+            <div class="botones">
+                <button type="submit" class="btn guardar">💾 Guardar</button>
+                <a href="/" class="btn cancelar">Cancelar</a>
+            </div>
+            {% endif %}
+
+        </form>
+
+    </div>
+</div>
+
+</body>
+</html>

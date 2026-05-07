@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Historial de Visitas</title>
+
+    <style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #eef2f7;
+    margin: 0;
+}
+
+.container {
+    width: 90%;
+    margin: 30px auto;
+}
+
+/* HEADER */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.header h1 {
+    color: #2c3e50;
+}
+
+/* BOTONES */
+.btn-main {
+    padding: 8px 12px;
+    background-color: #1e88e5;
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.btn-main:hover {
+    background-color: #1565c0;
+}
+
+/* BUSCADOR */
+.buscador {
+    display: flex;
+    gap: 10px;
+}
+
+.buscador input {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+/* CARD */
+.card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
+    padding: 20px;
+}
+
+/* TABLA */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background-color: #1e88e5;
+    color: white;
+    padding: 12px;
+    text-align: left;
+}
+
+td {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+}
+
+tr:hover {
+    background-color: #f5f9ff;
+}
+
+/* OBS */
+.obs {
+    max-width: 300px;
+    word-wrap: break-word;
+}
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+
+        <form method="GET" action="/visitas" class="buscador">
+            <input type="text" name="busqueda" placeholder="Buscar por proyecto...">
+            <button type="submit" class="btn-main">🔍</button>
+        </form>
+
+        <h1>📝 Historial de Visitas</h1>
+
+        <a href="/" class="btn-main">⬅️ Volver</a>
+    </div>
+
+    <!-- TABLA -->
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Contrato</th>
+                    <th>Proyecto</th>
+                    <th>Fecha</th>
+                    <th>Supervisor</th>
+                    <th>Residente</th>
+                    <th>Observaciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for v in visitas %}
+                <tr>
+                    <td>{{ v[0] }}</td>
+                    <td>{{ v[1] }}</td>
+                    <td>{{ v[2] }}</td>
+                    <td>{{ v[3] }}</td>
+                    <td>{{ v[4] }}</td>
+                    <td class="obs">{{ v[5] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+</body>
+</html>

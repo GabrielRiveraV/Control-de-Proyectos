@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Editar Proyecto</title>
+
+    <style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #eef2f7;
+    margin: 0;
+}
+
+.container {
+    width: 40%;
+    margin: 40px auto;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #2c3e50;
+}
+
+label {
+    font-weight: bold;
+    display: block;
+    margin-top: 12px;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    transition: 0.2s;
+}
+
+input:focus {
+    border-color: #1e88e5;
+    outline: none;
+}
+
+/* BOTONES */
+.botones {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 10px 15px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+}
+
+.guardar {
+    background-color: #28a745;
+}
+
+.guardar:hover {
+    background-color: #218838;
+}
+
+.cancelar {
+    background-color: #e74c3c;
+}
+
+.cancelar:hover {
+    background-color: #c0392b;
+}
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="card">
+
+        <h2>✏️ Editar Proyecto</h2>
+
+        <form action="/actualizar_proyecto" method="POST">
+
+            <input type="hidden" name="id" value="{{ proyecto[0] }}">
+
+            <label>Nombre:</label>
+            <input type="text" name="nombre" value="{{ proyecto[1] }}" required>
+
+            <label>Programa:</label>
+            <input type="text" name="programa" value="{{ proyecto[2] }}" required>
+
+            <label>Unidad Administrativa:</label>
+            <input type="text" name="un_ad" value="{{ proyecto[3] }}" required>
+
+            <label>Localidad:</label>
+            <input type="text" name="localidad" value="{{ proyecto[4] }}" required>
+
+            <label>Inversión autorizada:</label>
+            <input type="number" step="0.01" name="inversion" value="{{ proyecto[5] }}" required>
+
+            <div class="botones">
+                <button type="submit" class="btn guardar">💾 Guardar</button>
+                <a href="/" class="btn cancelar">Cancelar</a>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+</body>
+</html>
