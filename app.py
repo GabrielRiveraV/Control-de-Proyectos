@@ -88,7 +88,7 @@ def inicio():
     programas = [fila[0] for fila in datos2]
     totales_programas = [fila[1] for fila in datos2]
 
-    # 🔴 AHORA SÍ cerramos
+    # Cerrar conexión
     conexion.close()
 
     return render_template(
