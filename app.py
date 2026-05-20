@@ -33,11 +33,16 @@ def inicio():
             c.no_contrato,
             COUNT(v.id_visita) as total_visitas,
 
-            
+            CASE
+                WHEN c.id_contrato IS NOT NULL THEN 1
+                ELSE 0
+            END as tiene_contrato
 
         FROM proyectos p
-        LEFT JOIN contratos c ON p.id_proyecto = c.id_proyecto
-        LEFT JOIN visitas v ON c.id_contrato = v.id_contrato
+        LEFT JOIN contratos c 
+            ON p.id_proyecto = c.id_proyecto
+        LEFT JOIN visitas v 
+            ON c.id_contrato = v.id_contrato
 
         WHERE p.nombre LIKE %s 
         OR p.programa LIKE %s
@@ -49,7 +54,8 @@ def inicio():
             p.un_ad,
             p.localidad,
             p.inversion_autorizada,
-            c.no_contrato
+            c.no_contrato,
+            c.id_contrato
         """
 
         cursor.execute(query, (f"%{busqueda}%", f"%{busqueda}%"))
@@ -66,15 +72,16 @@ def inicio():
             c.no_contrato,
             COUNT(v.id_visita) as total_visitas,
 
-            EXISTS(
-                SELECT 1
-                FROM contratos c2
-                WHERE c2.id_proyecto = p.id_proyecto
-            ) AS tiene_contrato
+            CASE
+                WHEN c.id_contrato IS NOT NULL THEN 1
+                ELSE 0
+            END as tiene_contrato
 
         FROM proyectos p
-        LEFT JOIN contratos c ON p.id_proyecto = c.id_proyecto
-        LEFT JOIN visitas v ON c.id_contrato = v.id_contrato
+        LEFT JOIN contratos c 
+            ON p.id_proyecto = c.id_proyecto
+        LEFT JOIN visitas v 
+            ON c.id_contrato = v.id_contrato
 
         GROUP BY 
             p.id_proyecto,
@@ -83,7 +90,8 @@ def inicio():
             p.un_ad,
             p.localidad,
             p.inversion_autorizada,
-            c.no_contrato
+            c.no_contrato,
+            c.id_contrato
         """)
 
     proyectos = cursor.fetchall()

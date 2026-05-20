@@ -210,7 +210,7 @@ tr:hover {
         </div>
 
         <div class="card card-grafica">
-            <h3>📁 Proyectos por programa</h3>
+            <h3>📁 Proyectos por Fuentes de Financiamiento</h3>
             <canvas id="graficaProgramas"></canvas>
         </div>
 
@@ -289,15 +289,19 @@ tr:hover {
 </a>
 
     <!-- boton VISITA -->
-    {% if proyecto[6] %}
-    <a href="/nueva_visita/{{ proyecto[0] }}" class="btn visita" title="Registrar Visita">
-        📝
+    {% if proyecto[8] == 1 %}
+    <a href="/nueva_visita/{{ proyecto[0] }}" 
+    class="btn visita"
+    title="Agregar visita">
+    📝
     </a>
-{% else %}
-    <button class="btn deshabilitado" disabled title="Proyecto sin contrato">
+    {% else %}
+    <button class="btn deshabilitado"
+            title="Este proyecto no tiene contrato"
+            disabled>
         ⚠️
     </button>
-{% endif %}
+    {% endif %}
 
 
     <!-- VER VISITAS -->
