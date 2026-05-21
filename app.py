@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, redirect
 from flask_login import LoginManager, UserMixin
 from flask_login import login_user, login_required
 from flask_login import logout_user, current_user
+from flask import abort
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_key'
@@ -10,6 +11,19 @@ app.secret_key = 'super_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+from functools import wraps
+
+def solo_admin(f):
+
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+
+        if current_user.rol != 'admin':
+            abort(403)
+
+        return f(*args, **kwargs)
+
+    return decorated_function
 
 def conectar_db():
     return mysql.connector.connect(
@@ -244,6 +258,8 @@ def inicio():
 # FORMULARIO
 # ------------------------
 @app.route('/nuevo_proyecto')
+@login_required
+@solo_admin
 def nuevo_proyecto():
     return render_template('formulario.html')
 
@@ -278,6 +294,8 @@ def guardar_proyecto():
 # RUTA PARA ELIMINAR
 # ------------------------
 @app.route('/eliminar_proyecto/<int:id>')
+@login_required
+@solo_admin
 def eliminar_proyecto(id):
     conexion = conectar_db()
     cursor = conexion.cursor()
@@ -292,6 +310,8 @@ def eliminar_proyecto(id):
 # RUTA PARA EDITAR
 # ------------------------
 @app.route('/editar_proyecto/<int:id>')
+@login_required
+@solo_admin
 def editar_proyecto(id):
     conexion = conectar_db()
     cursor = conexion.cursor()
@@ -306,6 +326,8 @@ def editar_proyecto(id):
 # RUTA PARA ACTUALIZAR
 # ------------------------
 @app.route('/actualizar_proyecto', methods=['POST'])
+@login_required
+@solo_admin
 def actualizar_proyecto():
     id = request.form['id']
     nombre = request.form['nombre']
@@ -335,6 +357,8 @@ def actualizar_proyecto():
 # NUEVO CONTRATO
 # ------------------------
 @app.route('/nuevo_contrato/<int:id_proyecto>')
+@login_required
+@solo_admin
 def nuevo_contrato(id_proyecto):
     conexion = conectar_db()
     cursor = conexion.cursor()
@@ -357,6 +381,8 @@ def nuevo_contrato(id_proyecto):
 # GUARDAR CONTRATO
 # ------------------------
 @app.route('/guardar_contrato', methods=['POST'])
+@login_required
+@solo_admin
 def guardar_contrato():
     id_proyecto = request.form['id_proyecto']
     no_contrato = request.form['no_contrato']

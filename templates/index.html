@@ -264,10 +264,11 @@ tr:hover {
 
         <!-- BOTONES -->
         <div>
-
+            {% if current_user.rol == 'admin' %}
             <a href="/nuevo_proyecto" class="btn-main">
                 ➕ Proyecto
             </a>
+            {% endif %}
 
             <a href="/visitas" class="btn-main">
                 📊 Visitas
@@ -276,7 +277,7 @@ tr:hover {
         </div>
 
     </div>
-
+    {% if current_user.rol == 'admin' %}
     <!-- MÉTRICAS -->
     <div class="metricas">
 
@@ -319,6 +320,7 @@ tr:hover {
         </div>
 
     </div>
+    {% endif %}
 
     <!-- TABLA -->
     <div class="card-custom">
@@ -397,6 +399,7 @@ tr:hover {
                     <td class="acciones">
 
                         <!-- EDITAR -->
+                        {% if current_user.rol == 'admin' %}
                         <a href="/editar_proyecto/{{ proyecto[0] }}"
                            class="btn-accion editar"
                            title="Editar proyecto">
@@ -404,7 +407,9 @@ tr:hover {
                            ✏️
 
                         </a>
+                        {% endif %}
 
+                        {% if current_user.rol == 'admin' %}
                         <!-- NUEVO CONTRATO -->
                         <a href="/nuevo_contrato/{{ proyecto[0] }}"
                            class="btn-accion ver"
@@ -413,6 +418,7 @@ tr:hover {
                            📄
 
                         </a>
+                        {% endif %}
 
                         <!-- NUEVA VISITA -->
                         {% if proyecto[8] == 1 %}
@@ -447,6 +453,7 @@ tr:hover {
                         </a>
 
                         <!-- ELIMINAR -->
+                         {% if current_user.rol == 'admin' %}
                         <a href="/eliminar_proyecto/{{ proyecto[0] }}"
                            class="btn-accion eliminar"
                            title="Eliminar proyecto"
@@ -455,6 +462,7 @@ tr:hover {
                            🗑️
 
                         </a>
+                        {% endif %}
 
                     </td>
 
