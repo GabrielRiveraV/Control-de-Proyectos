@@ -1,7 +1,15 @@
 import mysql.connector
 from flask import Flask, render_template, request, redirect
+from flask_login import LoginManager, UserMixin
+from flask_login import login_user, login_required
+from flask_login import logout_user, current_user
 
 app = Flask(__name__)
+app.secret_key = 'super_secret_key'
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
 def conectar_db():
     return mysql.connector.connect(
@@ -10,11 +18,98 @@ def conectar_db():
         password="xls3780n",
         database="control_proyectos"
     )
+class User(UserMixin):
+    def __init__(self, id, nombre, usuario, rol):
+        self.id = id
+        self.nombre = nombre
+        self.usuario = usuario
+        self.rol = rol
+@login_manager.user_loader
+def load_user(user_id):
+
+    conexion = conectar_db()
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        SELECT id_usuario, nombre, usuario, rol
+        FROM usuarios
+        WHERE id_usuario = %s
+    """, (user_id,))
+
+    usuario_db = cursor.fetchone()
+
+    conexion.close()
+
+    if usuario_db:
+
+        return User(
+            usuario_db[0],
+            usuario_db[1],
+            usuario_db[2],
+            usuario_db[3]
+        )
+
+    return None
+
+# ------------------------
+# LOGIN
+# ------------------------
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+
+    if request.method == 'POST':
+
+        usuario = request.form['usuario']
+        password = request.form['password']
+
+        conexion = conectar_db()
+        cursor = conexion.cursor()
+
+        cursor.execute("""
+            SELECT id_usuario, nombre, usuario, rol
+            FROM usuarios
+            WHERE usuario = %s AND password = %s
+        """, (usuario, password))
+
+        usuario_db = cursor.fetchone()
+
+        conexion.close()
+
+        if usuario_db:
+
+            user = User(
+                usuario_db[0],
+                usuario_db[1],
+                usuario_db[2],
+                usuario_db[3]
+            )
+
+            login_user(user)
+
+            return redirect('/')
+
+        return "⚠️ Usuario o contraseña incorrectos"
+
+    return render_template('login.html')
+
+# ------------------------
+# LOGOUT
+# ------------------------
+
+@app.route('/logout')
+@login_required
+def logout():
+
+    logout_user()
+
+    return redirect('/login')
 
 # ------------------------
 # RUTA PRINCIPAL
 # ------------------------
 @app.route('/')
+@login_required
 def inicio():
     conexion = conectar_db()
     cursor = conexion.cursor()
@@ -405,39 +500,6 @@ def visitas_proyecto(id_proyecto):
 
     return render_template('visitas_proyecto.html', visitas=visitas)
 
-# ------------------------
-# LOGIN
-# ------------------------
-from flask import session
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        usuario = request.form['usuario']
-        password = request.form['password']
-
-        conexion = conectar_db()
-        cursor = conexion.cursor()
-
-        cursor.execute("""
-            SELECT id_usuario, nombre, rol 
-            FROM usuarios 
-            WHERE usuario=%s AND password=%s
-        """, (usuario, password))
-
-        user = cursor.fetchone()
-        conexion.close()
-
-        if user:
-            session['id_usuario'] = user[0]
-            session['nombre'] = user[1]
-            session['rol'] = user[2]
-
-            return redirect('/')
-        else:
-            return "Usuario o contraseña incorrectos"
-
-    return render_template('login.html')
 
 # ------------------------
 # EJECUCIÓN
