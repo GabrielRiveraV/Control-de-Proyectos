@@ -112,34 +112,87 @@ tr:hover {
         <a href="/" class="btn-main">⬅️ Volver</a>
     </div>
 
-    <!-- TABLA -->
-    <div class="card">
-        <table>
-            <thead>
-                <tr>
-                    <th>Contrato</th>
-                    <th>Proyecto</th>
-                    <th>Fecha</th>
-                    <th>Supervisor</th>
-                    <th>Residente</th>
-                    <th>Observaciones</th>
-                </tr>
-            </thead>
+<!-- TABLA -->
+<div class="card">
 
-            <tbody>
-                {% for v in visitas %}
-                <tr>
-                    <td>{{ v[0] }}</td>
-                    <td>{{ v[1] }}</td>
-                    <td>{{ v[2] }}</td>
-                    <td>{{ v[3] }}</td>
-                    <td>{{ v[4] }}</td>
-                    <td class="obs">{{ v[5] }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    <table>
+
+        <thead>
+            <tr>
+                <th>Contrato</th>
+                <th>Proyecto</th>
+                <th>Fecha</th>
+                <th>Supervisor</th>
+                <th>Residente</th>
+                <th>Observaciones</th>
+                <th>Acta</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for v in visitas %}
+
+            <tr>
+
+                <!-- DATOS -->
+                <td>{{ v[1] }}</td>
+                <td>{{ v[2] }}</td>
+                <td>{{ v[3] }}</td>
+                <td>{{ v[4] }}</td>
+                <td>{{ v[5] }}</td>
+
+                <!-- OBSERVACIONES -->
+                <td class="obs">
+                    {{ v[6] }}
+                </td>
+
+                <!-- ACTA -->
+                <td>
+
+                    {% if v[7] %}
+
+                        <a
+                            href="/{{ v[7] }}"
+                            target="_blank"
+                            class="btn btn-primary btn-sm"
+                        >
+                            📄 Ver acta
+                        </a>
+
+                    {% else %}
+
+                        <span class="text-muted">
+                            Sin archivo
+                        </span>
+
+                    {% endif %}
+
+                </td>
+
+                <!-- ACCIONES -->
+                <td>
+
+                    <a
+                        href="{{ url_for('eliminar_visita', id_visita=v[0]) }}"
+                        class="btn btn-danger btn-sm"
+                        onclick="return confirm('¿Eliminar esta visita?')"
+                    >
+                        🗑 Eliminar
+                    </a>
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
 
 </div>
 

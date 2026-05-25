@@ -4,6 +4,7 @@
     <title>Nueva Visita</title>
 
     <style>
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #eef2f7;
@@ -34,7 +35,8 @@ label {
     margin-top: 12px;
 }
 
-input, textarea {
+input,
+textarea {
     width: 100%;
     padding: 10px;
     margin-top: 5px;
@@ -42,9 +44,11 @@ input, textarea {
     border: 1px solid #ccc;
     transition: 0.2s;
     font-size: 14px;
+    box-sizing: border-box;
 }
 
-input:focus, textarea:focus {
+input:focus,
+textarea:focus {
     border-color: #1e88e5;
     outline: none;
 }
@@ -72,6 +76,13 @@ textarea {
     border-radius: 6px;
     margin-top: 10px;
     text-align: center;
+}
+
+/* SUBIDA ARCHIVO */
+.archivo-info {
+    font-size: 13px;
+    color: #555;
+    margin-top: 5px;
 }
 
 /* BOTONES */
@@ -116,25 +127,40 @@ textarea {
 .crear:hover {
     background-color: #1565c0;
 }
+
     </style>
 </head>
 
 <body>
 
 <div class="container">
+
     <div class="card">
 
         <h2>📝 Registrar Visita</h2>
 
-        <form action="/guardar_visita" method="POST">
+        <!-- IMPORTANTE:
+             enctype="multipart/form-data"
+             para permitir subida de archivos
+        -->
+
+        <form
+            action="/guardar_visita"
+            method="POST"
+            enctype="multipart/form-data"
+        >
 
             <!-- CONTRATO -->
             <label>Contrato:</label>
 
             {% if contrato %}
 
-                <!-- 🔑 INPUT OCULTO (CLAVE) -->
-                <input type="hidden" name="id_contrato" value="{{ contrato[0] }}">
+                <!-- INPUT OCULTO -->
+                <input
+                    type="hidden"
+                    name="id_contrato"
+                    value="{{ contrato[0] }}"
+                >
 
                 <div class="contrato-box">
                     📄 {{ contrato[1] }}
@@ -152,30 +178,86 @@ textarea {
 
             {% endif %}
 
-            <!-- CAMPOS -->
+            <!-- FECHA -->
             <label>Fecha:</label>
-            <input type="date" name="fecha" required>
 
+            <input
+                type="date"
+                name="fecha"
+                required
+            >
+
+            <!-- SUPERVISOR -->
             <label>Supervisor:</label>
-            <input type="text" name="supervisor" placeholder="Nombre del supervisor" required>
 
+            <input
+                type="text"
+                name="supervisor"
+                placeholder="Nombre del supervisor"
+                required
+            >
+
+            <!-- RESIDENTE -->
             <label>Residente de obra:</label>
-            <input type="text" name="residente" placeholder="Nombre del residente" required>
 
+            <input
+                type="text"
+                name="residente"
+                placeholder="Nombre del residente"
+                required
+            >
+
+            <!-- OBSERVACIONES -->
             <label>Observaciones:</label>
-            <textarea name="observaciones" placeholder="Describe lo observado..."></textarea>
+
+            <textarea
+                name="observaciones"
+                placeholder="Describe lo observado..."
+            ></textarea>
+
+            <!-- ACTA PDF / EXCEL -->
+            <label>Acta de visita:</label>
+
+            <input
+                type="file"
+                name="archivo_acta"
+                accept=".pdf,.xlsx,.xls"
+            >
+
+            <div class="archivo-info">
+                📎 Formatos permitidos:
+                PDF, XLSX, XLS
+                <br>
+                Tamaño máximo recomendado: 10 MB
+            </div>
 
             <!-- BOTONES -->
             {% if contrato %}
+
             <div class="botones">
-                <button type="submit" class="btn guardar">💾 Guardar</button>
-                <a href="/" class="btn cancelar">Cancelar</a>
+
+                <button
+                    type="submit"
+                    class="btn guardar"
+                >
+                    💾 Guardar
+                </button>
+
+                <a
+                    href="/"
+                    class="btn cancelar"
+                >
+                    Cancelar
+                </a>
+
             </div>
+
             {% endif %}
 
         </form>
 
     </div>
+
 </div>
 
 </body>

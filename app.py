@@ -1,17 +1,70 @@
+import os
 import mysql.connector
-from flask import Flask, render_template, request, redirect
-from flask_login import LoginManager, UserMixin
-from flask_login import login_user, login_required
-from flask_login import logout_user, current_user
-from flask import abort
+
+from functools import wraps
+
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    abort,
+    flash,
+    url_for
+)
+
+from flask_login import (
+    LoginManager,
+    UserMixin,
+    login_user,
+    login_required,
+    logout_user,
+    current_user
+)
+
+from werkzeug.utils import secure_filename
+
+
+# =========================
+# CONFIGURACIÓN FLASK
+# =========================
 
 app = Flask(__name__)
+
 app.secret_key = 'super_secret_key'
 
+UPLOAD_FOLDER = 'static/uploads/actas'
+
+ALLOWED_EXTENSIONS = {'pdf', 'xlsx', 'xls'}
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
+
+
+# =========================
+# LOGIN MANAGER
+# =========================
+
 login_manager = LoginManager()
+
 login_manager.init_app(app)
+
 login_manager.login_view = 'login'
-from functools import wraps
+
+
+# =========================
+# FUNCIONES AUXILIARES
+# =========================
+
+def archivo_permitido(nombre_archivo):
+
+    return (
+        '.' in nombre_archivo and
+        nombre_archivo.rsplit('.', 1)[1].lower()
+        in ALLOWED_EXTENSIONS
+    )
+
 
 def solo_admin(f):
 
@@ -412,61 +465,139 @@ def guardar_contrato():
 # NUEVA VISITA
 # ------------------------
 @app.route('/nueva_visita/<int:id_proyecto>')
+@login_required
 def nueva_visita(id_proyecto):
+
     conexion = conectar_db()
     cursor = conexion.cursor()
 
-    # 🔍 CONSULTA (AQUÍ VA EL JOIN)
+    # CONSULTA CONTRATO DEL PROYECTO
     cursor.execute("""
-        SELECT c.id_contrato, c.no_contrato
+        SELECT
+            c.id_contrato,
+            c.no_contrato
         FROM contratos c
-        INNER JOIN proyectos p ON c.id_proyecto = p.id_proyecto
+        INNER JOIN proyectos p
+            ON c.id_proyecto = p.id_proyecto
         WHERE p.id_proyecto = %s
     """, (id_proyecto,))
 
     contrato = cursor.fetchone()
 
-    # 🧪 DEBUG (AQUÍ)
     print("ID PROYECTO:", id_proyecto)
     print("CONTRATO:", contrato)
 
     conexion.close()
 
-    # 🚨 VALIDACIÓN (AQUÍ)
+    # VALIDACIÓN
     if not contrato:
-        return f"⚠️ No se encontró contrato para el proyecto ID {id_proyecto}"
+        return f"""
+        ⚠️ No se encontró contrato
+        para el proyecto ID {id_proyecto}
+        """
 
-    return render_template('nueva_visita.html', contrato=contrato)
+    return render_template(
+        'nueva_visita.html',
+        contrato=contrato
+    )
 
 # ------------------------
 # GUARDAR VISITA
 # ------------------------
 @app.route('/guardar_visita', methods=['POST'])
+@login_required
 def guardar_visita():
+
+    import uuid
+
+    # FORMULARIO
     id_contrato = request.form.get('id_contrato')
     fecha = request.form.get('fecha')
     supervisor = request.form.get('supervisor')
     residente = request.form.get('residente')
     observaciones = request.form.get('observaciones')
 
-    # 🔴 VALIDACIÓN IMPORTANTE
+    # ARCHIVO
+    archivo = request.files.get('archivo_acta')
+
+    nombre_archivo = None
+
+    # VALIDACIÓN CONTRATO
     if not id_contrato:
-        return "⚠️ Error: No se recibió el contrato. Verifica que el proyecto tenga un contrato asignado."
+
+        return """
+        ⚠️ Error:
+        No se recibió el contrato.
+        """
+
+    # =========================
+    # SUBIDA DE ARCHIVO
+    # =========================
+
+    if archivo and archivo.filename != '':
+
+        if archivo_permitido(archivo.filename):
+
+            # OBTENER EXTENSIÓN
+            extension = archivo.filename.rsplit('.', 1)[1].lower()
+
+            # NOMBRE ÚNICO
+            nombre_unico = f"{uuid.uuid4()}.{extension}"
+
+            # NOMBRE SEGURO
+            nombre_seguro = secure_filename(nombre_unico)
+
+            # RUTA COMPLETA
+            ruta_guardado = os.path.join(
+                app.config['UPLOAD_FOLDER'],
+                nombre_seguro
+            )
+
+            # GUARDAR ARCHIVO
+            archivo.save(ruta_guardado)
+
+            # GUARDAR RUTA EN DB
+            nombre_archivo = ruta_guardado
+
+        else:
+
+            return """
+            ⚠️ Tipo de archivo no permitido.
+            Solo PDF y Excel.
+            """
+
+    # =========================
+    # GUARDAR EN MYSQL
+    # =========================
 
     conexion = conectar_db()
+
     cursor = conexion.cursor()
 
     sql = """
-        INSERT INTO visitas (id_contrato, fecha_visita, supervisor, residente_obra, observaciones)
-        VALUES (%s, %s, %s, %s, %s)
+        INSERT INTO visitas (
+            id_contrato,
+            fecha_visita,
+            supervisor,
+            residente_obra,
+            observaciones,
+            archivo_acta
+        )
+        VALUES (%s, %s, %s, %s, %s, %s)
     """
 
-    valores = (id_contrato, fecha, supervisor, residente, observaciones)
+    valores = (
+        id_contrato,
+        fecha,
+        supervisor,
+        residente,
+        observaciones,
+        nombre_archivo
+    )
 
     cursor.execute(sql, valores)
     conexion.commit()
     conexion.close()
-
     return redirect('/')
 
 # ------------------------
@@ -474,36 +605,72 @@ def guardar_visita():
 # ------------------------
 @app.route('/visitas')
 def ver_visitas():
+
     conexion = conectar_db()
     cursor = conexion.cursor()
 
     busqueda = request.args.get('busqueda')
 
     if busqueda:
+
         cursor.execute("""
-            SELECT c.no_contrato, p.nombre, v.fecha_visita, 
-                   v.supervisor, v.residente_obra, v.observaciones
+            SELECT 
+                v.id_visita,
+                c.no_contrato,
+                p.nombre,
+                v.fecha_visita,
+                v.supervisor,
+                v.residente_obra,
+                v.observaciones,
+                v.archivo_acta
+
             FROM visitas v
-            JOIN contratos c ON v.id_contrato = c.id_contrato
-            JOIN proyectos p ON c.id_proyecto = p.id_proyecto
+
+            JOIN contratos c 
+                ON v.id_contrato = c.id_contrato
+
+            JOIN proyectos p 
+                ON c.id_proyecto = p.id_proyecto
+
             WHERE p.nombre LIKE %s
+
             ORDER BY v.fecha_visita DESC
+
         """, (f"%{busqueda}%",))
+
     else:
+
         cursor.execute("""
-            SELECT c.no_contrato, p.nombre, v.fecha_visita, 
-                   v.supervisor, v.residente_obra, v.observaciones
+            SELECT 
+                v.id_visita,
+                c.no_contrato,
+                p.nombre,
+                v.fecha_visita,
+                v.supervisor,
+                v.residente_obra,
+                v.observaciones,
+                v.archivo_acta
+
             FROM visitas v
-            JOIN contratos c ON v.id_contrato = c.id_contrato
-            JOIN proyectos p ON c.id_proyecto = p.id_proyecto
+
+            JOIN contratos c 
+                ON v.id_contrato = c.id_contrato
+
+            JOIN proyectos p 
+                ON c.id_proyecto = p.id_proyecto
+
             ORDER BY v.fecha_visita DESC
         """)
 
     visitas = cursor.fetchall()
+
     conexion.close()
 
-    return render_template('visitas.html', visitas=visitas)
-
+    return render_template(
+        'visitas.html',
+        visitas=visitas
+    )
+    
 # ------------------------
 # VISITAS POR PROYECTO
 # ------------------------
@@ -513,7 +680,15 @@ def visitas_proyecto(id_proyecto):
     cursor = conexion.cursor()
 
     cursor.execute("""
-        SELECT p.nombre, c.no_contrato, v.fecha_visita, v.supervisor, v.residente_obra, v.observaciones
+            SELECT 
+        v.id_visita,
+        p.nombre,
+        c.no_contrato,
+        v.fecha_visita,
+        v.supervisor,
+        v.residente_obra,
+        v.observaciones,
+        v.archivo_acta
         FROM visitas v
         JOIN contratos c ON v.id_contrato = c.id_contrato
         JOIN proyectos p ON c.id_proyecto = p.id_proyecto
@@ -525,6 +700,51 @@ def visitas_proyecto(id_proyecto):
     conexion.close()
 
     return render_template('visitas_proyecto.html', visitas=visitas)
+
+# ------------------------
+# ELIMINAR VISITA
+# ------------------------
+@app.route('/eliminar_visita/<int:id_visita>')
+def eliminar_visita(id_visita):
+
+    conexion = conectar_db()
+    cursor = conexion.cursor()
+
+    # Obtener archivo
+    cursor.execute("""
+        SELECT archivo_acta
+        FROM visitas
+        WHERE id_visita = %s
+    """, (id_visita,))
+
+    visita = cursor.fetchone()
+
+    # Eliminar archivo físico
+    if visita and visita[0]:
+
+        ruta_archivo = visita[0]
+
+        # Normalizar ruta
+        ruta_archivo = os.path.normpath(ruta_archivo)
+
+        # Verificar existencia
+        if os.path.exists(ruta_archivo):
+
+            os.remove(ruta_archivo)
+
+    # Eliminar visita
+    cursor.execute("""
+        DELETE FROM visitas
+        WHERE id_visita = %s
+    """, (id_visita,))
+
+    conexion.commit()
+    conexion.close()
+
+    flash('Visita eliminada correctamente')
+
+    # Regresar a la página anterior
+    return redirect(request.referrer)
 
 
 # ------------------------
