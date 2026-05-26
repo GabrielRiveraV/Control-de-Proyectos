@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Registrar Proyecto</title>
 
@@ -92,6 +93,27 @@ input:focus {
         <h2>📁 Registrar Proyecto</h2>
 
         <form action="/guardar_proyecto" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Ejercicio fiscal
+                </label>
+
+                <select
+                    name="ejercicio_fiscal"
+                    class="form-select"
+                    required
+                >
+
+                    <option value="2025">2025</option>
+                    <option value="2026" selected>2026</option>
+                    <option value="2027">2027</option>
+
+                </select>
+
+            </div>
 
             <!-- NOMBRE -->
             <label>Nombre del proyecto:</label>

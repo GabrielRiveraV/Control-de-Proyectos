@@ -2,6 +2,13 @@ import os
 import mysql.connector
 
 from functools import wraps
+from dotenv import load_dotenv
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash
+)
+from flask_wtf.csrf import CSRFProtect
+from werkzeug.utils import secure_filename
 
 from flask import (
     Flask,
@@ -22,17 +29,15 @@ from flask_login import (
     current_user
 )
 
-from werkzeug.utils import secure_filename
-
 
 # =========================
 # CONFIGURACIÓN FLASK
 # =========================
 
 app = Flask(__name__)
-
-app.secret_key = 'super_secret_key'
-
+load_dotenv()
+csrf = CSRFProtect(app)
+app.secret_key = os.getenv('SECRET_KEY')
 UPLOAD_FOLDER = 'static/uploads/actas'
 
 ALLOWED_EXTENSIONS = {'pdf', 'xlsx', 'xls'}
@@ -80,10 +85,10 @@ def solo_admin(f):
 
 def conectar_db():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="xls3780n",
-        database="control_proyectos"
+        host=os.getenv('DB_HOST'),
+        user=os.getenv('DB_USER'),
+        password=os.getenv('DB_PASSWORD'),
+        database=os.getenv('DB_NAME')
     )
 class User(UserMixin):
     def __init__(self, id, nombre, usuario, rol):
@@ -134,29 +139,36 @@ def login():
         cursor = conexion.cursor()
 
         cursor.execute("""
-            SELECT id_usuario, nombre, usuario, rol
+            SELECT
+                id_usuario,
+                nombre,
+                usuario,
+                password,
+                rol
             FROM usuarios
-            WHERE usuario = %s AND password = %s
-        """, (usuario, password))
+            WHERE usuario = %s
+              AND activo = 1
+        """, (usuario,))
 
         usuario_db = cursor.fetchone()
 
         conexion.close()
 
-        if usuario_db:
+        # VALIDAR PASSWORD HASH
+        if usuario_db and check_password_hash(usuario_db[3], password):
 
             user = User(
                 usuario_db[0],
                 usuario_db[1],
                 usuario_db[2],
-                usuario_db[3]
+                usuario_db[4]
             )
 
             login_user(user)
 
             return redirect('/')
 
-        return "⚠️ Usuario o contraseña incorrectos"
+        flash('⚠️ Usuario o contraseña incorrectos')
 
     return render_template('login.html')
 
@@ -178,12 +190,14 @@ def logout():
 @app.route('/')
 @login_required
 def inicio():
+
     conexion = conectar_db()
     cursor = conexion.cursor()
 
     busqueda = request.args.get('busqueda')
 
     if busqueda:
+
         query = """
         SELECT 
             p.id_proyecto, 
@@ -192,6 +206,7 @@ def inicio():
             p.un_ad, 
             p.localidad, 
             p.inversion_autorizada,
+            p.ejercicio_fiscal,
             c.no_contrato,
             COUNT(v.id_visita) as total_visitas,
 
@@ -201,8 +216,10 @@ def inicio():
             END as tiene_contrato
 
         FROM proyectos p
+
         LEFT JOIN contratos c 
             ON p.id_proyecto = c.id_proyecto
+
         LEFT JOIN visitas v 
             ON c.id_contrato = v.id_contrato
 
@@ -216,13 +233,24 @@ def inicio():
             p.un_ad,
             p.localidad,
             p.inversion_autorizada,
+            p.ejercicio_fiscal,
             c.no_contrato,
             c.id_contrato
+
+        ORDER BY p.ejercicio_fiscal DESC,
+                 p.id_proyecto DESC
         """
 
-        cursor.execute(query, (f"%{busqueda}%", f"%{busqueda}%"))
+        cursor.execute(
+            query,
+            (
+                f"%{busqueda}%",
+                f"%{busqueda}%"
+            )
+        )
 
     else:
+
         cursor.execute("""
         SELECT 
             p.id_proyecto, 
@@ -231,6 +259,7 @@ def inicio():
             p.un_ad, 
             p.localidad, 
             p.inversion_autorizada,
+            p.ejercicio_fiscal,
             c.no_contrato,
             COUNT(v.id_visita) as total_visitas,
 
@@ -240,8 +269,10 @@ def inicio():
             END as tiene_contrato
 
         FROM proyectos p
+
         LEFT JOIN contratos c 
             ON p.id_proyecto = c.id_proyecto
+
         LEFT JOIN visitas v 
             ON c.id_contrato = v.id_contrato
 
@@ -252,8 +283,12 @@ def inicio():
             p.un_ad,
             p.localidad,
             p.inversion_autorizada,
+            p.ejercicio_fiscal,
             c.no_contrato,
             c.id_contrato
+
+        ORDER BY p.ejercicio_fiscal DESC,
+                 p.id_proyecto DESC
         """)
 
     proyectos = cursor.fetchall()
@@ -306,7 +341,6 @@ def inicio():
         programas=programas,
         totales_programas=totales_programas
     )
-
 # ------------------------
 # FORMULARIO
 # ------------------------
@@ -321,28 +355,44 @@ def nuevo_proyecto():
 # ------------------------
 @app.route('/guardar_proyecto', methods=['POST'])
 def guardar_proyecto():
+
     nombre = request.form['nombre']
     programa = request.form['programa']
     un_ad = request.form['un_ad']
     localidad = request.form['localidad']
     inversion = request.form['inversion']
+    ejercicio_fiscal = request.form['ejercicio_fiscal']
 
     conexion = conectar_db()
     cursor = conexion.cursor()
 
     sql = """
-        INSERT INTO proyectos (nombre, programa, un_ad, localidad, inversion_autorizada)
-        VALUES (%s, %s, %s, %s, %s)
+        INSERT INTO proyectos (
+            nombre,
+            programa,
+            un_ad,
+            localidad,
+            inversion_autorizada,
+            ejercicio_fiscal
+        )
+        VALUES (%s, %s, %s, %s, %s, %s)
     """
 
-    valores = (nombre, programa, un_ad, localidad, inversion)
+    valores = (
+        nombre,
+        programa,
+        un_ad,
+        localidad,
+        inversion,
+        ejercicio_fiscal
+    )
 
     cursor.execute(sql, valores)
+
     conexion.commit()
     conexion.close()
 
     return redirect('/')
-
 # ------------------------
 # RUTA PARA ELIMINAR
 # ------------------------
@@ -604,6 +654,7 @@ def guardar_visita():
 # VISITAS GENERALES
 # ------------------------
 @app.route('/visitas')
+@login_required
 def ver_visitas():
 
     conexion = conectar_db()
@@ -675,6 +726,7 @@ def ver_visitas():
 # VISITAS POR PROYECTO
 # ------------------------
 @app.route('/visitas_proyecto/<int:id_proyecto>')
+@login_required
 def visitas_proyecto(id_proyecto):
     conexion = conectar_db()
     cursor = conexion.cursor()
@@ -705,6 +757,7 @@ def visitas_proyecto(id_proyecto):
 # ELIMINAR VISITA
 # ------------------------
 @app.route('/eliminar_visita/<int:id_visita>')
+@login_required
 def eliminar_visita(id_visita):
 
     conexion = conectar_db()

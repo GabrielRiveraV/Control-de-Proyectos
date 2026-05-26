@@ -101,6 +101,7 @@ input:focus, select:focus {
         <h2>📄 Registrar Contrato</h2>
 
         <form action="/guardar_contrato" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <!-- PROYECTO -->
             <label>Proyecto:</label>

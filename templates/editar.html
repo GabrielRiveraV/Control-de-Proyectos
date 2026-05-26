@@ -91,6 +91,7 @@ input:focus {
         <h2>✏️ Editar Proyecto</h2>
 
         <form action="/actualizar_proyecto" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <input type="hidden" name="id" value="{{ proyecto[0] }}">
 
