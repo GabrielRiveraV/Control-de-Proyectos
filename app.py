@@ -1,8 +1,14 @@
 import os
 import mysql.connector
-
+from routes.auth import (
+    auth_bp,
+    User,
+    solo_admin
+)
+from database import conectar_db
 from functools import wraps
 from dotenv import load_dotenv
+from config import Config
 from werkzeug.security import (
     generate_password_hash,
     check_password_hash
@@ -35,75 +41,31 @@ from flask_login import (
 # =========================
 
 app = Flask(__name__)
-load_dotenv()
+app.config.from_object(Config)
+app.secret_key = app.config['SECRET_KEY']
 csrf = CSRFProtect(app)
-app.secret_key = os.getenv('SECRET_KEY')
-UPLOAD_FOLDER = 'static/uploads/actas'
-
-ALLOWED_EXTENSIONS = {'pdf', 'xlsx', 'xls'}
-
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
-
 
 # =========================
 # LOGIN MANAGER
 # =========================
 
 login_manager = LoginManager()
-
 login_manager.init_app(app)
-
-login_manager.login_view = 'login'
-
-
-# =========================
-# FUNCIONES AUXILIARES
-# =========================
-
-def archivo_permitido(nombre_archivo):
-
-    return (
-        '.' in nombre_archivo and
-        nombre_archivo.rsplit('.', 1)[1].lower()
-        in ALLOWED_EXTENSIONS
-    )
-
-
-def solo_admin(f):
-
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-
-        if current_user.rol != 'admin':
-            abort(403)
-
-        return f(*args, **kwargs)
-
-    return decorated_function
-
-def conectar_db():
-    return mysql.connector.connect(
-        host=os.getenv('DB_HOST'),
-        user=os.getenv('DB_USER'),
-        password=os.getenv('DB_PASSWORD'),
-        database=os.getenv('DB_NAME')
-    )
-class User(UserMixin):
-    def __init__(self, id, nombre, usuario, rol):
-        self.id = id
-        self.nombre = nombre
-        self.usuario = usuario
-        self.rol = rol
+login_manager.login_view = 'auth.login'
+app.register_blueprint(auth_bp)
 @login_manager.user_loader
 def load_user(user_id):
 
     conexion = conectar_db()
+
     cursor = conexion.cursor()
 
     cursor.execute("""
-        SELECT id_usuario, nombre, usuario, rol
+        SELECT
+            id_usuario,
+            nombre,
+            usuario,
+            rol
         FROM usuarios
         WHERE id_usuario = %s
     """, (user_id,))
@@ -123,66 +85,18 @@ def load_user(user_id):
 
     return None
 
-# ------------------------
-# LOGIN
-# ------------------------
+# =========================
+# FUNCIONES AUXILIARES
+# =========================
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
+def archivo_permitido(nombre_archivo):
 
-    if request.method == 'POST':
+    return (
+        '.' in nombre_archivo and
+        nombre_archivo.rsplit('.', 1)[1].lower()
+        in app.config['ALLOWED_EXTENSIONS']
+    )
 
-        usuario = request.form['usuario']
-        password = request.form['password']
-
-        conexion = conectar_db()
-        cursor = conexion.cursor()
-
-        cursor.execute("""
-            SELECT
-                id_usuario,
-                nombre,
-                usuario,
-                password,
-                rol
-            FROM usuarios
-            WHERE usuario = %s
-              AND activo = 1
-        """, (usuario,))
-
-        usuario_db = cursor.fetchone()
-
-        conexion.close()
-
-        # VALIDAR PASSWORD HASH
-        if usuario_db and check_password_hash(usuario_db[3], password):
-
-            user = User(
-                usuario_db[0],
-                usuario_db[1],
-                usuario_db[2],
-                usuario_db[4]
-            )
-
-            login_user(user)
-
-            return redirect('/')
-
-        flash('⚠️ Usuario o contraseña incorrectos')
-
-    return render_template('login.html')
-
-# ------------------------
-# LOGOUT
-# ------------------------
-
-@app.route('/logout')
-@login_required
-def logout():
-
-    logout_user()
-
-    return redirect('/login')
 
 # ------------------------
 # RUTA PRINCIPAL
@@ -804,4 +718,4 @@ def eliminar_visita(id_visita):
 # EJECUCIÓN
 # ------------------------
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug = True)
