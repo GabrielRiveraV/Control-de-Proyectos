@@ -2,7 +2,9 @@ from flask import (
     Blueprint,
     render_template,
     request,
-    redirect
+    redirect,
+    flash,
+    url_for
 )
 
 from flask_login import (
@@ -13,13 +15,10 @@ from flask_login import (
 )
 
 from werkzeug.security import check_password_hash
-
+from utils.auditoria import registrar_auditoria
 from functools import wraps
-
 from flask import abort
-
 from flask_login import current_user
-
 from database import conectar_db
 
 
@@ -104,6 +103,13 @@ def login():
             )
 
             login_user(user)
+            
+            registrar_auditoria(
+                user.nombre,
+                'Inició sesión',
+                'auth',
+                request.remote_addr
+            )
 
             return redirect('/')
 
@@ -112,14 +118,24 @@ def login():
     return render_template('login.html')
 
 
-# =========================
-# LOGOUT
-# =========================
-
+# ------------------------
+# CERRAR SESIÓN (LOGOUT)
+# ------------------------
 @auth_bp.route('/logout')
 @login_required
 def logout():
 
+    nombre_usuario = current_user.nombre
+
+    registrar_auditoria(
+        nombre_usuario,
+        'Cerró sesión',
+        'login',
+        request.remote_addr
+    )
+
     logout_user()
 
-    return redirect('/login')
+    flash('Sesión cerrada correctamente')
+
+    return redirect(url_for('auth.login'))

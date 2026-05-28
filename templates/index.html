@@ -252,8 +252,11 @@ tr:hover {
                 Bienvenido, {{ current_user.nombre }}
             </span>
 
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm">
+            <a href="{{ url_for('auth.logout') }}"
+               class="btn btn-outline-light btn-sm">
+
                 Cerrar sesión
+
             </a>
 
         </div>
@@ -290,20 +293,31 @@ tr:hover {
 
         <!-- BOTONES -->
         <div>
+
             {% if current_user.rol == 'admin' %}
+
             <a href="/nuevo_proyecto" class="btn-main">
                 ➕ Proyecto
             </a>
+
             {% endif %}
 
             <a href="/visitas" class="btn-main">
                 📊 Visitas
             </a>
 
+            {% if current_user.rol == 'admin' %}
+            <a href="/auditoria" class="btn-main">
+                📋 Auditoría
+            </a>
+            {% endif %}
+
         </div>
 
     </div>
+
     {% if current_user.rol == 'admin' %}
+
     <!-- MÉTRICAS -->
     <div class="metricas">
 
@@ -346,6 +360,7 @@ tr:hover {
         </div>
 
     </div>
+
     {% endif %}
 
     <!-- TABLA -->
@@ -374,38 +389,38 @@ tr:hover {
                 {% for proyecto in proyectos %}
 
                 <tr>
-         
+
                     <!-- NOMBRE -->
-                    <td>{{ proyecto[1] }}</td>
+                    <td>{{ proyecto.nombre }}</td>
 
                     <!-- PROGRAMA -->
-                    <td>{{ proyecto[2] }}</td>
+                    <td>{{ proyecto.programa }}</td>
 
                     <!-- UNIDAD ADMINISTRATIVA -->
-                    <td>{{ proyecto[3] }}</td>
+                    <td>{{ proyecto.un_ad }}</td>
 
                     <!-- LOCALIDAD -->
-                    <td>{{ proyecto[4] }}</td>
+                    <td>{{ proyecto.localidad }}</td>
 
                     <!-- INVERSIÓN -->
                     <td class="monto">
-                        ${{ "{:,.2f}".format(proyecto[5]) }}
+                        ${{ "{:,.2f}".format(proyecto.inversion_autorizada) }}
                     </td>
 
-                    <!-- NUEVO: EJERCICIO FISCAL -->
+                    <!-- EJERCICIO -->
                     <td>
-                        {{ proyecto[6] }}
+                        {{ proyecto.ejercicio_fiscal }}
                     </td>
 
                     <!-- CONTRATO -->
                     <td>
-                        {{ proyecto[7] if proyecto[7] else 'Sin contrato' }}
+                        {{ proyecto.no_contrato if proyecto.no_contrato else 'Sin contrato' }}
                     </td>
 
-                    <!-- AVANCE -->
+                    <!-- VISITAS -->
                     <td>
 
-                        {% set avance = proyecto[8] * 10 if proyecto[8] else 0 %}
+                        {% set avance = proyecto.total_visitas * 10 if proyecto.total_visitas else 0 %}
 
                         {% if avance < 30 %}
                             {% set color = '#e74c3c' %}
@@ -439,34 +454,71 @@ tr:hover {
 
                         <!-- EDITAR -->
                         {% if current_user.rol == 'admin' %}
-                        <a href="/editar_proyecto/{{ proyecto[0] }}"
-                        class="btn-accion editar"
-                        title="Editar proyecto">
 
-                        <i class="bi bi-pencil-fill"></i>
+                        <a href="/editar_proyecto/{{ proyecto.id_proyecto }}"
+                           class="btn-accion editar"
+                           title="Editar proyecto">
+
+                            <i class="bi bi-pencil-fill"></i>
 
                         </a>
+
                         {% endif %}
 
-                        <!-- NUEVO CONTRATO -->
+                        <!-- CONTRATOS -->
                         {% if current_user.rol == 'admin' %}
-                        <a href="/nuevo_contrato/{{ proyecto[0] }}"
-                        class="btn-accion ver"
-                        title="Agregar contrato">
 
-                        <i class="bi bi-file-earmark-text-fill"></i>
+                            {% if not proyecto.tiene_contrato %}
 
-                        </a>
+                            <!-- AGREGAR CONTRATO -->
+                            <a href="/nuevo_contrato/{{ proyecto.id_proyecto }}"
+                               class="btn-accion ver"
+                               title="Agregar contrato">
+
+                                📄
+
+                            </a>
+
+                            {% else %}
+
+                                <!-- VER CONTRATO PDF -->
+                                {% if proyecto.archivo_contrato %}
+
+                                <a href="/ver_contrato/{{ proyecto.id_contrato }}"
+                                   class="btn-accion ver"
+                                   title="Ver contrato PDF"
+                                   target="_blank">
+
+                                    <i class="bi bi-file-earmark-pdf-fill"></i>
+
+                                </a>
+
+                                {% endif %}
+
+                                <!-- ELIMINAR CONTRATO -->
+                                <a href="/eliminar_contrato/{{ proyecto.id_contrato }}"
+                                   class="btn-accion eliminar"
+                                   title="Eliminar contrato"
+                                   onclick="return confirm(
+                                   'Se eliminarán visitas, avances, observaciones y PDF relacionados. ¿Continuar?'
+                                   )">
+
+                                    <i class="bi bi-trash-fill"></i>
+
+                                </a>
+
+                            {% endif %}
+
                         {% endif %}
 
                         <!-- NUEVA VISITA -->
-                        {% if proyecto[9] == 1 %}
+                        {% if proyecto.tiene_contrato %}
 
-                        <a href="/nueva_visita/{{ proyecto[0] }}"
-                        class="btn-accion visita"
-                        title="Agregar visita">
+                        <a href="/nueva_visita/{{ proyecto.id_proyecto }}"
+                           class="btn-accion visita"
+                           title="Agregar visita">
 
-                        <i class="bi bi-clipboard2-check-fill"></i>
+                            <i class="bi bi-clipboard2-check-fill"></i>
 
                         </a>
 
@@ -483,24 +535,28 @@ tr:hover {
                         {% endif %}
 
                         <!-- VER VISITAS -->
-                        <a href="/visitas_proyecto/{{ proyecto[0] }}"
-                        class="btn-accion ver"
-                        title="Ver historial de visitas">
+                        <a href="/visitas_proyecto/{{ proyecto.id_proyecto }}"
+                           class="btn-accion ver"
+                           title="Ver historial de visitas">
 
-                        <i class="bi bi-bar-chart-fill"></i>
+                            <i class="bi bi-bar-chart-fill"></i>
 
                         </a>
 
-                        <!-- ELIMINAR -->
+                        <!-- ELIMINAR PROYECTO -->
                         {% if current_user.rol == 'admin' %}
-                        <a href="/eliminar_proyecto/{{ proyecto[0] }}"
-                        class="btn-accion eliminar"
-                        title="Eliminar proyecto"
-                        onclick="return confirm('¿Seguro que deseas eliminar este proyecto?')">
 
-                        <i class="bi bi-trash-fill"></i>
+                        <a href="/eliminar_proyecto/{{ proyecto.id_proyecto }}"
+                           class="btn-accion eliminar"
+                           title="Eliminar proyecto"
+                           onclick="return confirm(
+                           '¿Seguro que deseas eliminar este proyecto?'
+                           )">
+
+                            <i class="bi bi-trash-fill"></i>
 
                         </a>
+
                         {% endif %}
 
                     </td>

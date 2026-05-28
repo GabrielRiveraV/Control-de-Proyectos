@@ -5,6 +5,9 @@ from routes.auth import (
     User,
     solo_admin
 )
+from routes.contratos import contratos_bp
+from routes.proyectos import proyectos_bp
+from routes.visitas import visitas_bp
 from database import conectar_db
 from functools import wraps
 from dotenv import load_dotenv
@@ -53,6 +56,9 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'auth.login'
 app.register_blueprint(auth_bp)
+app.register_blueprint(proyectos_bp)
+app.register_blueprint(contratos_bp)
+app.register_blueprint(visitas_bp)
 @login_manager.user_loader
 def load_user(user_id):
 
@@ -88,6 +94,10 @@ def load_user(user_id):
 # =========================
 # FUNCIONES AUXILIARES
 # =========================
+app.config['UPLOAD_FOLDER_CONTRATOS'] = (
+    'static/uploads/contratos'
+)
+app.config['ALLOWED_EXTENSIONS'] = {'pdf'}
 
 def archivo_permitido(nombre_archivo):
 
@@ -96,403 +106,6 @@ def archivo_permitido(nombre_archivo):
         nombre_archivo.rsplit('.', 1)[1].lower()
         in app.config['ALLOWED_EXTENSIONS']
     )
-
-
-# ------------------------
-# RUTA PRINCIPAL
-# ------------------------
-@app.route('/')
-@login_required
-def inicio():
-
-    conexion = conectar_db()
-    cursor = conexion.cursor()
-
-    busqueda = request.args.get('busqueda')
-
-    if busqueda:
-
-        query = """
-        SELECT 
-            p.id_proyecto, 
-            p.nombre, 
-            p.programa, 
-            p.un_ad, 
-            p.localidad, 
-            p.inversion_autorizada,
-            p.ejercicio_fiscal,
-            c.no_contrato,
-            COUNT(v.id_visita) as total_visitas,
-
-            CASE
-                WHEN c.id_contrato IS NOT NULL THEN 1
-                ELSE 0
-            END as tiene_contrato
-
-        FROM proyectos p
-
-        LEFT JOIN contratos c 
-            ON p.id_proyecto = c.id_proyecto
-
-        LEFT JOIN visitas v 
-            ON c.id_contrato = v.id_contrato
-
-        WHERE p.nombre LIKE %s 
-        OR p.programa LIKE %s
-
-        GROUP BY 
-            p.id_proyecto,
-            p.nombre,
-            p.programa,
-            p.un_ad,
-            p.localidad,
-            p.inversion_autorizada,
-            p.ejercicio_fiscal,
-            c.no_contrato,
-            c.id_contrato
-
-        ORDER BY p.ejercicio_fiscal DESC,
-                 p.id_proyecto DESC
-        """
-
-        cursor.execute(
-            query,
-            (
-                f"%{busqueda}%",
-                f"%{busqueda}%"
-            )
-        )
-
-    else:
-
-        cursor.execute("""
-        SELECT 
-            p.id_proyecto, 
-            p.nombre, 
-            p.programa, 
-            p.un_ad, 
-            p.localidad, 
-            p.inversion_autorizada,
-            p.ejercicio_fiscal,
-            c.no_contrato,
-            COUNT(v.id_visita) as total_visitas,
-
-            CASE
-                WHEN c.id_contrato IS NOT NULL THEN 1
-                ELSE 0
-            END as tiene_contrato
-
-        FROM proyectos p
-
-        LEFT JOIN contratos c 
-            ON p.id_proyecto = c.id_proyecto
-
-        LEFT JOIN visitas v 
-            ON c.id_contrato = v.id_contrato
-
-        GROUP BY 
-            p.id_proyecto,
-            p.nombre,
-            p.programa,
-            p.un_ad,
-            p.localidad,
-            p.inversion_autorizada,
-            p.ejercicio_fiscal,
-            c.no_contrato,
-            c.id_contrato
-
-        ORDER BY p.ejercicio_fiscal DESC,
-                 p.id_proyecto DESC
-        """)
-
-    proyectos = cursor.fetchall()
-
-    # 🔹 MÉTRICAS
-    cursor.execute("SELECT COUNT(*) FROM proyectos")
-    total_proyectos = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COUNT(*) FROM contratos")
-    total_contratos = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COUNT(*) FROM visitas")
-    total_visitas = cursor.fetchone()[0]
-
-    # 🔹 GRÁFICA 1
-    cursor.execute("""
-        SELECT DATE_FORMAT(fecha_visita, '%Y-%m'), COUNT(*)
-        FROM visitas
-        GROUP BY DATE_FORMAT(fecha_visita, '%Y-%m')
-    """)
-
-    datos = cursor.fetchall()
-
-    meses = [fila[0] for fila in datos]
-    totales_visitas = [fila[1] for fila in datos]
-
-    # 🔹 GRÁFICA 2
-    cursor.execute("""
-        SELECT programa, COUNT(*) 
-        FROM proyectos 
-        GROUP BY programa
-    """)
-
-    datos2 = cursor.fetchall()
-
-    programas = [fila[0] for fila in datos2]
-    totales_programas = [fila[1] for fila in datos2]
-
-    # 🔹 Cerrar conexión
-    conexion.close()
-
-    return render_template(
-        "index.html",
-        proyectos=proyectos,
-        total_proyectos=total_proyectos,
-        total_contratos=total_contratos,
-        total_visitas=total_visitas,
-        meses=meses,
-        totales_visitas=totales_visitas,
-        programas=programas,
-        totales_programas=totales_programas
-    )
-# ------------------------
-# FORMULARIO
-# ------------------------
-@app.route('/nuevo_proyecto')
-@login_required
-@solo_admin
-def nuevo_proyecto():
-    return render_template('formulario.html')
-
-# ------------------------
-# GUARDAR DATOS
-# ------------------------
-@app.route('/guardar_proyecto', methods=['POST'])
-def guardar_proyecto():
-
-    nombre = request.form['nombre']
-    programa = request.form['programa']
-    un_ad = request.form['un_ad']
-    localidad = request.form['localidad']
-    inversion = request.form['inversion']
-    ejercicio_fiscal = request.form['ejercicio_fiscal']
-
-    conexion = conectar_db()
-    cursor = conexion.cursor()
-
-    sql = """
-        INSERT INTO proyectos (
-            nombre,
-            programa,
-            un_ad,
-            localidad,
-            inversion_autorizada,
-            ejercicio_fiscal
-        )
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """
-
-    valores = (
-        nombre,
-        programa,
-        un_ad,
-        localidad,
-        inversion,
-        ejercicio_fiscal
-    )
-
-    cursor.execute(sql, valores)
-
-    conexion.commit()
-    conexion.close()
-
-    return redirect('/')
-# ------------------------
-# RUTA PARA ELIMINAR
-# ------------------------
-@app.route('/eliminar_proyecto/<int:id>')
-@login_required
-@solo_admin
-def eliminar_proyecto(id):
-    conexion = conectar_db()
-    cursor = conexion.cursor()
-
-    cursor.execute("DELETE FROM proyectos WHERE id_proyecto = %s", (id,))
-    conexion.commit()
-    conexion.close()
-
-    return redirect('/')
-
-# ------------------------
-# RUTA PARA EDITAR
-# ------------------------
-@app.route('/editar_proyecto/<int:id>')
-@login_required
-@solo_admin
-def editar_proyecto(id):
-    conexion = conectar_db()
-    cursor = conexion.cursor()
-
-    cursor.execute("SELECT * FROM proyectos WHERE id_proyecto = %s", (id,))
-    proyecto = cursor.fetchone()
-
-    conexion.close()
-    return render_template('editar.html', proyecto=proyecto)
-
-# ------------------------
-# RUTA PARA ACTUALIZAR
-# ------------------------
-@app.route('/actualizar_proyecto', methods=['POST'])
-@login_required
-@solo_admin
-def actualizar_proyecto():
-    id = request.form['id']
-    nombre = request.form['nombre']
-    programa = request.form['programa']
-    un_ad = request.form['un_ad']
-    localidad = request.form['localidad']
-    inversion = request.form['inversion']
-
-    conexion = conectar_db()
-    cursor = conexion.cursor()
-
-    sql = """
-        UPDATE proyectos
-        SET nombre=%s, programa=%s, un_ad=%s, localidad=%s, inversion_autorizada=%s
-        WHERE id_proyecto=%s
-    """
-
-    valores = (nombre, programa, un_ad, localidad, inversion, id)
-
-    cursor.execute(sql, valores)
-    conexion.commit()
-    conexion.close()
-
-    return redirect('/')
-
-# ------------------------
-# NUEVO CONTRATO
-# ------------------------
-@app.route('/nuevo_contrato/<int:id_proyecto>')
-@login_required
-@solo_admin
-def nuevo_contrato(id_proyecto):
-    conexion = conectar_db()
-    cursor = conexion.cursor()
-
-    cursor.execute("SELECT id_proyecto, nombre FROM proyectos WHERE id_proyecto = %s", (id_proyecto,))
-    proyecto_seleccionado = cursor.fetchone()
-
-    cursor.execute("SELECT id_proyecto, nombre FROM proyectos")
-    proyectos = cursor.fetchall()
-
-    conexion.close()
-
-    return render_template(
-        'nuevo_contrato.html',
-        proyectos=proyectos,
-        proyecto_seleccionado=proyecto_seleccionado
-    )
-
-# ------------------------
-# GUARDAR CONTRATO
-# ------------------------
-@app.route('/guardar_contrato', methods=['POST'])
-@login_required
-@solo_admin
-def guardar_contrato():
-    id_proyecto = request.form['id_proyecto']
-    no_contrato = request.form['no_contrato']
-    fecha = request.form['fecha']
-    contratista = request.form['contratista']
-    monto = request.form['monto']
-
-    conexion = conectar_db()
-    cursor = conexion.cursor()
-
-    sql = """
-        INSERT INTO contratos (id_proyecto, no_contrato, fecha_contrato, contratista, monto_contratado)
-        VALUES (%s, %s, %s, %s, %s)
-    """
-
-    try:
-        cursor.execute(sql, (id_proyecto, no_contrato, fecha, contratista, monto))
-        conexion.commit()
-    except:
-        conexion.close()
-        return "⚠️ Este proyecto ya tiene un contrato asignado"
-
-    conexion.close()
-    return redirect('/')
-
-# ------------------------
-# NUEVA VISITA
-# ------------------------
-@app.route('/nueva_visita/<int:id_proyecto>')
-@login_required
-def nueva_visita(id_proyecto):
-
-    conexion = conectar_db()
-    cursor = conexion.cursor()
-
-    # CONSULTA CONTRATO DEL PROYECTO
-    cursor.execute("""
-        SELECT
-            c.id_contrato,
-            c.no_contrato
-        FROM contratos c
-        INNER JOIN proyectos p
-            ON c.id_proyecto = p.id_proyecto
-        WHERE p.id_proyecto = %s
-    """, (id_proyecto,))
-
-    contrato = cursor.fetchone()
-
-    print("ID PROYECTO:", id_proyecto)
-    print("CONTRATO:", contrato)
-
-    conexion.close()
-
-    # VALIDACIÓN
-    if not contrato:
-        return f"""
-        ⚠️ No se encontró contrato
-        para el proyecto ID {id_proyecto}
-        """
-
-    return render_template(
-        'nueva_visita.html',
-        contrato=contrato
-    )
-
-# ------------------------
-# GUARDAR VISITA
-# ------------------------
-@app.route('/guardar_visita', methods=['POST'])
-@login_required
-def guardar_visita():
-
-    import uuid
-
-    # FORMULARIO
-    id_contrato = request.form.get('id_contrato')
-    fecha = request.form.get('fecha')
-    supervisor = request.form.get('supervisor')
-    residente = request.form.get('residente')
-    observaciones = request.form.get('observaciones')
-
-    # ARCHIVO
-    archivo = request.files.get('archivo_acta')
-
-    nombre_archivo = None
-
-    # VALIDACIÓN CONTRATO
-    if not id_contrato:
-
-        return """
-        ⚠️ Error:
-        No se recibió el contrato.
-        """
 
     # =========================
     # SUBIDA DE ARCHIVO
@@ -564,6 +177,7 @@ def guardar_visita():
     conexion.close()
     return redirect('/')
 
+#RUTAS------------RUTAS---------------RUTAS------------RUTAS--------------
 # ------------------------
 # VISITAS GENERALES
 # ------------------------
@@ -664,55 +278,7 @@ def visitas_proyecto(id_proyecto):
 
     visitas = cursor.fetchall()
     conexion.close()
-
     return render_template('visitas_proyecto.html', visitas=visitas)
-
-# ------------------------
-# ELIMINAR VISITA
-# ------------------------
-@app.route('/eliminar_visita/<int:id_visita>')
-@login_required
-def eliminar_visita(id_visita):
-
-    conexion = conectar_db()
-    cursor = conexion.cursor()
-
-    # Obtener archivo
-    cursor.execute("""
-        SELECT archivo_acta
-        FROM visitas
-        WHERE id_visita = %s
-    """, (id_visita,))
-
-    visita = cursor.fetchone()
-
-    # Eliminar archivo físico
-    if visita and visita[0]:
-
-        ruta_archivo = visita[0]
-
-        # Normalizar ruta
-        ruta_archivo = os.path.normpath(ruta_archivo)
-
-        # Verificar existencia
-        if os.path.exists(ruta_archivo):
-
-            os.remove(ruta_archivo)
-
-    # Eliminar visita
-    cursor.execute("""
-        DELETE FROM visitas
-        WHERE id_visita = %s
-    """, (id_visita,))
-
-    conexion.commit()
-    conexion.close()
-
-    flash('Visita eliminada correctamente')
-
-    # Regresar a la página anterior
-    return redirect(request.referrer)
-
 
 # ------------------------
 # EJECUCIÓN

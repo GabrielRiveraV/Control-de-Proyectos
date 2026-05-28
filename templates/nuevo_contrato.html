@@ -100,7 +100,10 @@ input:focus, select:focus {
 
         <h2>📄 Registrar Contrato</h2>
 
-        <form action="/guardar_contrato" method="POST">
+        <form
+            action="/guardar_contrato"
+            method="POST"
+            enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <!-- PROYECTO -->
@@ -143,6 +146,14 @@ input:focus, select:focus {
             <!-- MONTO -->
             <label>Monto:</label>
             <input type="number" name="monto" step="0.01" placeholder="Ej. 150000.50" required>
+
+            <label>Contrato PDF:</label>
+            <input
+                type="file"
+                name="archivo_contrato"
+                accept=".pdf"
+                class="form-control"
+            >
 
             <!-- BOTONES -->
             <div class="botones">
