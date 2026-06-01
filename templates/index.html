@@ -43,6 +43,7 @@ body {
 .header h1 {
     color: #2c3e50;
     margin: 0;
+    font-size: 2.2rem;
 }
 
 /* BOTONES PRINCIPALES */
@@ -80,14 +81,20 @@ body {
     grid-template-columns: repeat(3, 1fr);
     gap: 15px;
     margin-bottom: 20px;
+    padding: 5px;
 }
 
 .metrica {
     background: white;
-    padding: 15px;
-    border-radius: 10px;
+    padding: 18px;
+    border-radius: 14px;
     text-align: center;
-    box-shadow: 0px 3px 8px rgba(0,0,0,0.08);
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
+    transition: .2s;
+}
+
+.metrica:hover {
+    transform: translateY(-2px);
 }
 
 .metrica h2 {
@@ -98,24 +105,30 @@ body {
 /* GRÁFICAS */
 .graficas {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    grid-template-columns: 2fr 1fr;
+    gap: 25px;
+    margin-top: 30px;
     margin-bottom: 20px;
 }
 
 .card-custom {
     background-color: white;
-    border-radius: 10px;
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
-    padding: 15px;
+    border-radius: 14px;
+    box-shadow: 0px 4px 14px rgba(0,0,0,0.08);
+    padding: 18px;
 }
 
 .card-grafica {
-    height: 300px;
+    min-height: 380px;
+}
+
+.card-grafica h3 {
+    margin-bottom: 20px;
 }
 
 .card-grafica canvas {
-    max-height: 220px;
+    width: 100% !important;
+    height: 280px !important;
 }
 
 /* TABLA */
@@ -129,13 +142,14 @@ table {
 th {
     background-color: #1e88e5;
     color: white;
-    padding: 8px;
+    padding: 12px 10px;
     text-align: left;
     font-size: 14px;
+    font-weight: 600;
 }
 
 td {
-    padding: 6px;
+    padding: 4px 6px;
     border-bottom: 1px solid #eee;
     font-size: 14px;
 }
@@ -144,8 +158,9 @@ td {
     overflow-x: auto;
 }
 
-tr:hover {
-    background-color: #f5f9ff;
+tbody tr:hover {
+    background-color: #f1f7ff;
+    transition: .15s;
 }
 
 .monto {
@@ -227,6 +242,79 @@ tr:hover {
     .buscador input {
         width: 100%;
     }
+}
+
+.dropdown-acciones {
+    position: relative;
+    display: inline-block;
+}
+
+.btn-menu {
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 8px;
+    background: #6c757d;
+    color: white;
+    cursor: pointer;
+}
+
+.menu-contenido {
+    display: none;
+    position: absolute;
+    right: 0;
+    background: white;
+    min-width: 180px;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    z-index: 1000;
+}
+
+.menu-contenido a {
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    color: #333;
+}
+
+.menu-contenido a:hover {
+    background: #f5f5f5;
+}
+
+.dropdown-acciones:hover .menu-contenido {
+    display: block;
+}
+
+.dropdown .btn-accion{
+    background-color: #6c757d;
+}
+
+.dropdown .btn-accion:hover{
+    background-color: #5a6268;
+}
+thead {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.barra-avance {
+    width: 140px;
+    height: 24px;
+    background: #e9ecef;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 4px rgba(0,0,0,.15);
+}
+
+.barra-avance-fill {
+    height: 100%;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 22px;
+    transition: width .4s ease;
 }
 
     </style>
@@ -338,29 +426,6 @@ tr:hover {
 
     </div>
 
-    <!-- GRÁFICAS -->
-    <div class="graficas">
-
-        <!-- GRAFICA VISITAS -->
-        <div class="card-custom card-grafica">
-
-            <h3>📊 Visitas por mes</h3>
-
-            <canvas id="graficaVisitas"></canvas>
-
-        </div>
-
-        <!-- GRAFICA PROGRAMAS -->
-        <div class="card-custom card-grafica">
-
-            <h3>📁 Proyectos por Fuentes de Financiamiento</h3>
-
-            <canvas id="graficaProgramas"></canvas>
-
-        </div>
-
-    </div>
-
     {% endif %}
 
     <!-- TABLA -->
@@ -430,20 +495,20 @@ tr:hover {
                             {% set color = '#2ecc71' %}
                         {% endif %}
 
-                        <div style="background:#ddd; width:100px; border-radius:5px;">
+                        <div class="barra-avance">
 
-                            <div style="
-                                background:{{ color }};
-                                width:{{ avance }}%;
-                                color:white;
-                                text-align:center;
-                                border-radius:5px;
-                                font-size:11px;
-                            ">
+                            <div
+                                class="barra-avance-fill"
+                                style="
+                                    width:{{ avance }}%;
+                                    background:{{ color }};
+                                ">
 
                                 {{ avance }}%
 
                             </div>
+
+                        </div>
 
                         </div>
 
@@ -454,69 +519,21 @@ tr:hover {
 
                         <!-- EDITAR -->
                         {% if current_user.rol == 'admin' %}
-
                         <a href="/editar_proyecto/{{ proyecto.id_proyecto }}"
-                           class="btn-accion editar"
-                           title="Editar proyecto">
+                        class="btn-accion editar"
+                        title="Editar proyecto">
 
                             <i class="bi bi-pencil-fill"></i>
 
                         </a>
-
-                        {% endif %}
-
-                        <!-- CONTRATOS -->
-                        {% if current_user.rol == 'admin' %}
-
-                            {% if not proyecto.tiene_contrato %}
-
-                            <!-- AGREGAR CONTRATO -->
-                            <a href="/nuevo_contrato/{{ proyecto.id_proyecto }}"
-                               class="btn-accion ver"
-                               title="Agregar contrato">
-
-                                📄
-
-                            </a>
-
-                            {% else %}
-
-                                <!-- VER CONTRATO PDF -->
-                                {% if proyecto.archivo_contrato %}
-
-                                <a href="/ver_contrato/{{ proyecto.id_contrato }}"
-                                   class="btn-accion ver"
-                                   title="Ver contrato PDF"
-                                   target="_blank">
-
-                                    <i class="bi bi-file-earmark-pdf-fill"></i>
-
-                                </a>
-
-                                {% endif %}
-
-                                <!-- ELIMINAR CONTRATO -->
-                                <a href="/eliminar_contrato/{{ proyecto.id_contrato }}"
-                                   class="btn-accion eliminar"
-                                   title="Eliminar contrato"
-                                   onclick="return confirm(
-                                   'Se eliminarán visitas, avances, observaciones y PDF relacionados. ¿Continuar?'
-                                   )">
-
-                                    <i class="bi bi-trash-fill"></i>
-
-                                </a>
-
-                            {% endif %}
-
                         {% endif %}
 
                         <!-- NUEVA VISITA -->
                         {% if proyecto.tiene_contrato %}
 
                         <a href="/nueva_visita/{{ proyecto.id_proyecto }}"
-                           class="btn-accion visita"
-                           title="Agregar visita">
+                        class="btn-accion visita"
+                        title="Registrar visita">
 
                             <i class="bi bi-clipboard2-check-fill"></i>
 
@@ -534,66 +551,166 @@ tr:hover {
 
                         {% endif %}
 
-                        <!-- VER VISITAS -->
+                        <!-- HISTORIAL -->
                         <a href="/visitas_proyecto/{{ proyecto.id_proyecto }}"
-                           class="btn-accion ver"
-                           title="Ver historial de visitas">
+                        class="btn-accion ver"
+                        title="Historial de visitas">
 
                             <i class="bi bi-bar-chart-fill"></i>
 
                         </a>
 
-                        <!-- ELIMINAR PROYECTO -->
+                        <!-- MENÚ MÁS ACCIONES -->
                         {% if current_user.rol == 'admin' %}
 
-                        <a href="/eliminar_proyecto/{{ proyecto.id_proyecto }}"
-                           class="btn-accion eliminar"
-                           title="Eliminar proyecto"
-                           onclick="return confirm(
-                           '¿Seguro que deseas eliminar este proyecto?'
-                           )">
+                        <div class="dropdown">
 
-                            <i class="bi bi-trash-fill"></i>
+                            <button
+                                class="btn-accion btn-secondary"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                title="Más acciones">
 
-                        </a>
+                                <i class="bi bi-three-dots-vertical"></i>
 
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+
+                                <!-- AGREGAR CONTRATO -->
+                                {% if not proyecto.tiene_contrato %}
+
+                                <li>
+
+                                    <a class="dropdown-item"
+                                    href="/nuevo_contrato/{{ proyecto.id_proyecto }}">
+
+                                        <i class="bi bi-file-earmark-plus"></i>
+                                        Agregar contrato
+
+                                    </a>
+
+                                </li>
+
+                                {% else %}
+
+                                    <!-- VER PDF -->
+                                    {% if proyecto.archivo_contrato %}
+
+                                    <li>
+
+                                        <a class="dropdown-item"
+                                        href="/ver_contrato/{{ proyecto.id_contrato }}"
+                                        target="_blank">
+
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                            Ver PDF
+
+                                        </a>
+
+                                    </li>
+
+                                    {% endif %}
+
+                                    <!-- ELIMINAR CONTRATO -->
+                                    <li>
+
+                                        <a class="dropdown-item text-danger"
+                                        href="/eliminar_contrato/{{ proyecto.id_contrato }}"
+                                        onclick="return confirm(
+                                        'Se eliminarán visitas, avances, observaciones y PDF relacionados. ¿Continuar?'
+                                        )">
+
+                                            <i class="bi bi-trash"></i>
+                                            Eliminar contrato
+
+                                        </a>
+
+                                    </li>
+
+                                {% endif %}
+
+                                <li><hr class="dropdown-divider"></li>
+
+                                <!-- ELIMINAR PROYECTO -->
+                                <li>
+
+                                    <a class="dropdown-item text-danger"
+                                    href="/eliminar_proyecto/{{ proyecto.id_proyecto }}"
+                                    onclick="return confirm(
+                                    '¿Seguro que deseas eliminar este proyecto?'
+                                    )">
+
+                                        <i class="bi bi-trash-fill"></i>
+                                        Eliminar proyecto
+
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                         {% endif %}
-
                     </td>
-
                 </tr>
-
                 {% endfor %}
-
             </tbody>
-
         </table>
-
     </div>
 
+    {% if current_user.rol == 'admin' %}
+    <!-- GRÁFICAS -->
+    <div class="graficas">
+
+        <!-- GRAFICA VISITAS -->
+        <div class="card-custom card-grafica">
+
+            <h3>📊 Visitas por mes</h3>
+
+            <canvas id="graficaVisitas"></canvas>
+
+        </div>
+
+        <!-- GRAFICA PROGRAMAS -->
+        <div class="card-custom card-grafica">
+
+            <h3>📁 Proyectos por Fuentes de Financiamiento</h3>
+
+            <canvas id="graficaProgramas"></canvas>
+
+        </div>
+
+    </div>
+    {% endif %}
 </div>
 
 <!-- GRÁFICAS -->
 <script>
-
 // VISITAS POR MES
 new Chart(document.getElementById('graficaVisitas'), {
-
     type: 'bar',
 
     data: {
-
         labels: {{ meses | tojson }},
-
         datasets: [{
-
             label: 'Visitas',
             data: {{ totales_visitas | tojson }}
-
         }]
+    },
 
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+
+        plugins: {
+            legend: {
+                labels: {
+                    font: {
+                        size: 16
+                    }
+                }
+            }
+        }
     }
-
 });
 
 // PROYECTOS POR PROGRAMA
@@ -611,11 +728,29 @@ new Chart(document.getElementById('graficaProgramas'), {
 
         }]
 
+    },
+
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: {
+                    font: {
+                        size: 15
+                    },
+                    padding: 20
+                }
+            }
+        }
     }
 
 });
 
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
