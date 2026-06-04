@@ -49,6 +49,7 @@ body {
 /* BOTONES PRINCIPALES */
 .btn-main {
     padding: 8px 12px;
+    border-radius: 8px;
     background-color: #1e88e5;
     color: white;
     border-radius: 6px;
@@ -156,6 +157,7 @@ td {
 
 .table-responsive {
     overflow-x: auto;
+    overflow-y: auto;
 }
 
 tbody tr:hover {
@@ -292,10 +294,10 @@ tbody tr:hover {
 .dropdown .btn-accion:hover{
     background-color: #5a6268;
 }
-thead {
-    position: sticky;
-    top: 0;
-    z-index: 100;
+
+.pagination .page-item.active .page-link {
+    background-color: #1e88e5;
+    border-color: #1e88e5;
 }
 
 .barra-avance {
@@ -510,8 +512,6 @@ thead {
 
                         </div>
 
-                        </div>
-
                     </td>
 
                     <!-- ACCIONES -->
@@ -613,6 +613,18 @@ thead {
 
                                     {% endif %}
 
+                                    <li>
+
+                                        <a class="dropdown-item"
+                                        href="/expediente_contrato/{{ proyecto.id_contrato }}">
+
+                                            <i class="bi bi-folder2-open"></i>
+                                            Expediente del contrato
+
+                                        </a>
+
+                                    </li>
+                                
                                     <!-- ELIMINAR CONTRATO -->
                                     <li>
 
@@ -656,6 +668,65 @@ thead {
             </tbody>
         </table>
     </div>
+
+    <nav class="mt-4">
+
+        <ul class="pagination justify-content-center">
+
+            {% if pagina > 1 %}
+
+            <li class="page-item">
+
+                <a class="page-link"
+                href="{{ url_for('proyectos.inicio',
+                                    pagina=pagina-1,
+                                    busqueda=busqueda) }}">
+
+                    Anterior
+
+                </a>
+
+            </li>
+
+            {% endif %}
+
+            {% for p in range(1, total_paginas + 1) %}
+
+            <li class="page-item {% if p == pagina %}active{% endif %}">
+
+                <a class="page-link"
+                href="{{ url_for('proyectos.inicio',
+                                    pagina=p,
+                                    busqueda=busqueda) }}">
+
+                    {{ p }}
+
+                </a>
+
+            </li>
+
+            {% endfor %}
+
+            {% if pagina < total_paginas %}
+
+            <li class="page-item">
+
+                <a class="page-link"
+                href="{{ url_for('proyectos.inicio',
+                                    pagina=pagina+1,
+                                    busqueda=busqueda) }}">
+
+                    Siguiente
+
+                </a>
+
+            </li>
+
+            {% endif %}
+
+        </ul>
+
+    </nav>
 
     {% if current_user.rol == 'admin' %}
     <!-- GRÁFICAS -->
