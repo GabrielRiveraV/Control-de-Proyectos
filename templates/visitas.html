@@ -154,7 +154,7 @@ tr:hover {
                     {% if v[7] %}
 
                         <a
-                            href="/{{ v[7] }}"
+                            href="{{ url_for('static', filename='uploads/actas/' ~ v[7]) }}"
                             target="_blank"
                             class="btn btn-primary btn-sm"
                         >
@@ -174,13 +174,17 @@ tr:hover {
                 <!-- ACCIONES -->
                 <td>
 
-                    <a
-                        href="{{ url_for('visitas.eliminar_visita', id_visita=v[0]) }}"
-                        class="btn btn-danger btn-sm"
-                        onclick="return confirm('¿Eliminar esta visita?')"
+                    <form
+                        method="POST"
+                        action="{{ url_for('visitas.eliminar_visita', id_visita=v[0]) }}"
+                        onsubmit="return confirm('¿Eliminar esta visita?')"
                     >
-                        🗑 Eliminar
-                    </a>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            Eliminar
+                        </button>
+                    </form>
 
                 </td>
 

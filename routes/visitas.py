@@ -1,12 +1,14 @@
 import os
 from flask import (
     Blueprint,
+    current_app,
     render_template,
     request,
     redirect,
     url_for,
     flash
 )
+from werkzeug.utils import secure_filename
 from utils.auditoria import registrar_auditoria
 from flask_login import login_required, current_user
 from routes.auth import solo_admin
@@ -16,6 +18,15 @@ visitas_bp = Blueprint(
     'visitas',
     __name__
 )
+
+
+def archivo_permitido(nombre_archivo):
+
+    return (
+        '.' in nombre_archivo and
+        nombre_archivo.rsplit('.', 1)[1].lower()
+        in current_app.config['ALLOWED_EXTENSIONS']
+    )
 
 # ------------------------
 # NUEVA VISITA
@@ -101,6 +112,13 @@ def guardar_visita():
                 f"acta_{uuid.uuid4().hex}.{extension}"
             )
 
+            nombre_archivo = secure_filename(nombre_archivo)
+
+            os.makedirs(
+                current_app.config['UPLOAD_FOLDER_ACTAS'],
+                exist_ok=True
+            )
+
             ruta_guardado = os.path.join(
                 current_app.config['UPLOAD_FOLDER_ACTAS'],
                 nombre_archivo
@@ -111,7 +129,7 @@ def guardar_visita():
         else:
 
             flash(
-                'Archivo no permitido. Solo PDF.',
+                'Archivo no permitido. Solo PDF, XLSX o XLS.',
                 'danger'
             )
 
@@ -168,7 +186,7 @@ def guardar_visita():
 # ------------------------
 # ELIMINAR VISITA
 # ------------------------
-@visitas_bp.route('/eliminar_visita/<int:id_visita>')
+@visitas_bp.route('/eliminar_visita/<int:id_visita>', methods=['POST'])
 @login_required
 @solo_admin
 def eliminar_visita(id_visita):
@@ -204,9 +222,16 @@ def eliminar_visita(id_visita):
     # ------------------------
     if visita['archivo_acta']:
 
-        ruta_archivo = os.path.normpath(
-            visita['archivo_acta']
-        )
+        ruta_archivo = visita['archivo_acta']
+
+        if not os.path.dirname(ruta_archivo):
+
+            ruta_archivo = os.path.join(
+                current_app.config['UPLOAD_FOLDER_ACTAS'],
+                ruta_archivo
+            )
+
+        ruta_archivo = os.path.normpath(ruta_archivo)
 
         if os.path.exists(ruta_archivo):
 

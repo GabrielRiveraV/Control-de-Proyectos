@@ -628,16 +628,20 @@ tbody tr:hover {
                                     <!-- ELIMINAR CONTRATO -->
                                     <li>
 
-                                        <a class="dropdown-item text-danger"
-                                        href="/eliminar_contrato/{{ proyecto.id_contrato }}"
-                                        onclick="return confirm(
+                                        <form method="POST"
+                                        action="/eliminar_contrato/{{ proyecto.id_contrato }}"
+                                        onsubmit="return confirm(
                                         'Se eliminarán visitas, avances, observaciones y PDF relacionados. ¿Continuar?'
                                         )">
 
-                                            <i class="bi bi-trash"></i>
-                                            Eliminar contrato
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                                        </a>
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="bi bi-trash"></i>
+                                                Eliminar contrato
+                                            </button>
+
+                                        </form>
 
                                     </li>
 
@@ -648,16 +652,20 @@ tbody tr:hover {
                                 <!-- ELIMINAR PROYECTO -->
                                 <li>
 
-                                    <a class="dropdown-item text-danger"
-                                    href="/eliminar_proyecto/{{ proyecto.id_proyecto }}"
-                                    onclick="return confirm(
+                                    <form method="POST"
+                                    action="/eliminar_proyecto/{{ proyecto.id_proyecto }}"
+                                    onsubmit="return confirm(
                                     '¿Seguro que deseas eliminar este proyecto?'
                                     )">
 
-                                        <i class="bi bi-trash-fill"></i>
-                                        Eliminar proyecto
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                                    </a>
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bi bi-trash-fill"></i>
+                                            Eliminar proyecto
+                                        </button>
+
+                                    </form>
                                 </li>
                             </ul>
                         </div>

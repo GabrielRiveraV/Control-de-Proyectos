@@ -40,7 +40,7 @@ from flask_login import (
 
 
 # =========================
-# CONFIGURACIÓN FLASK
+# CONFIGURACIÃ“N FLASK
 # =========================
 
 app = Flask(__name__)
@@ -91,14 +91,6 @@ def load_user(user_id):
 
     return None
 
-# =========================
-# FUNCIONES AUXILIARES
-# =========================
-app.config['UPLOAD_FOLDER_CONTRATOS'] = (
-    'static/uploads/contratos'
-)
-app.config['ALLOWED_EXTENSIONS'] = {'pdf'}
-
 def archivo_permitido(nombre_archivo):
 
     return (
@@ -106,76 +98,6 @@ def archivo_permitido(nombre_archivo):
         nombre_archivo.rsplit('.', 1)[1].lower()
         in app.config['ALLOWED_EXTENSIONS']
     )
-
-    # =========================
-    # SUBIDA DE ARCHIVO
-    # =========================
-
-    if archivo and archivo.filename != '':
-
-        if archivo_permitido(archivo.filename):
-
-            # OBTENER EXTENSIÓN
-            extension = archivo.filename.rsplit('.', 1)[1].lower()
-
-            # NOMBRE ÚNICO
-            nombre_unico = f"{uuid.uuid4()}.{extension}"
-
-            # NOMBRE SEGURO
-            nombre_seguro = secure_filename(nombre_unico)
-
-            # RUTA COMPLETA
-            ruta_guardado = os.path.join(
-                app.config['UPLOAD_FOLDER'],
-                nombre_seguro
-            )
-
-            # GUARDAR ARCHIVO
-            archivo.save(ruta_guardado)
-
-            # GUARDAR RUTA EN DB
-            nombre_archivo = ruta_guardado
-
-        else:
-
-            return """
-            ⚠️ Tipo de archivo no permitido.
-            Solo PDF y Excel.
-            """
-
-    # =========================
-    # GUARDAR EN MYSQL
-    # =========================
-
-    conexion = conectar_db()
-
-    cursor = conexion.cursor()
-
-    sql = """
-        INSERT INTO visitas (
-            id_contrato,
-            fecha_visita,
-            supervisor,
-            residente_obra,
-            observaciones,
-            archivo_acta
-        )
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """
-
-    valores = (
-        id_contrato,
-        fecha,
-        supervisor,
-        residente,
-        observaciones,
-        nombre_archivo
-    )
-
-    cursor.execute(sql, valores)
-    conexion.commit()
-    conexion.close()
-    return redirect('/')
 
 #RUTAS------------RUTAS---------------RUTAS------------RUTAS--------------
 # ------------------------
@@ -281,7 +203,7 @@ def visitas_proyecto(id_proyecto):
     return render_template('visitas_proyecto.html', visitas=visitas)
 
 # ------------------------
-# EJECUCIÓN
+# EJECUCIÃ“N
 # ------------------------
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug = True)
+    app.run(host='0.0.0.0', port=5000, debug=False)

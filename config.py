@@ -35,6 +35,10 @@ class Config:
 
     UPLOAD_FOLDER = 'static/uploads/actas'
 
+    UPLOAD_FOLDER_ACTAS = 'static/uploads/actas'
+
+    UPLOAD_FOLDER_CONTRATOS = 'static/uploads/contratos'
+
     MAX_CONTENT_LENGTH = 10 * 1024 * 1024
 
 

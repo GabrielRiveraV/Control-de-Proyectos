@@ -9,7 +9,7 @@ from flask import (
 import os
 from werkzeug.utils import secure_filename
 from flask import send_from_directory
-from flask_login import login_required
+from flask_login import login_required, current_user
 from utils.auditoria import registrar_auditoria
 from database import conectar_db
 
@@ -162,12 +162,22 @@ def ver_contrato(id_contrato):
     cursor = conexion.cursor()
 
     cursor.execute("""
-        SELECT archivo_contrato
+        SELECT
+            archivo_contrato,
+            no_contrato
         FROM contratos
         WHERE id_contrato = %s
     """, (id_contrato,))
 
     contrato = cursor.fetchone()
+
+    if not contrato:
+
+        conexion.close()
+
+        flash('Contrato no encontrado.', 'danger')
+
+        return redirect(url_for('proyectos.inicio'))
 
     conexion.close()
 
@@ -175,7 +185,7 @@ def ver_contrato(id_contrato):
 
         flash('Contrato PDF no encontrado.', 'danger')
 
-        return redirect(url_for('inicio'))
+        return redirect(url_for('proyectos.inicio'))
 
     return send_from_directory(
         'static/uploads/contratos',
@@ -185,21 +195,32 @@ def ver_contrato(id_contrato):
 #-----------------------------
 # ELIMINAR CONTRATO
 #-----------------------------
-@contratos_bp.route('/eliminar_contrato/<int:id_contrato>')
+@contratos_bp.route('/eliminar_contrato/<int:id_contrato>', methods=['POST'])
 @login_required
+@solo_admin
 def eliminar_contrato(id_contrato):
 
     conexion = conectar_db()
-    cursor = conexion.cursor()
+    cursor = conexion.cursor(dictionary=True)
 
     # OBTENER PDF
     cursor.execute("""
-        SELECT archivo_contrato
+        SELECT
+            archivo_contrato,
+            no_contrato
         FROM contratos
         WHERE id_contrato = %s
     """, (id_contrato,))
 
     contrato = cursor.fetchone()
+
+    if not contrato:
+
+        conexion.close()
+
+        flash('Contrato no encontrado.', 'danger')
+
+        return redirect(url_for('proyectos.inicio'))
 
     registrar_auditoria(
         current_user.nombre,
@@ -208,11 +229,11 @@ def eliminar_contrato(id_contrato):
         request.remote_addr
     )
 
-    if contrato and contrato[0]:
+    if contrato['archivo_contrato']:
 
         ruta_pdf = os.path.join(
             'static/uploads/contratos',
-            contrato[0]
+            contrato['archivo_contrato']
         )
 
         if os.path.exists(ruta_pdf):
@@ -240,4 +261,4 @@ def eliminar_contrato(id_contrato):
         'success'
     )
 
-    return redirect(url_for('inicio'))
+    return redirect(url_for('proyectos.inicio'))

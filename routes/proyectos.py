@@ -27,71 +27,7 @@ def inicio():
 
     conexion = conectar_db()
     cursor = conexion.cursor(dictionary=True)
-    
-    if request.method == 'POST':
 
-        cursor.execute("""
-            UPDATE contratos
-            SET
-
-                no_contrato = %s,
-                fecha_contrato = %s,
-                contratista = %s,
-
-                inversion_autorizada = %s,
-                monto_contratado = %s,
-                anticipo = %s,
-
-                periodo_ejecucion = %s,
-                plazo_ejecucion = %s,
-
-                fecha_inicio_real = %s,
-                fecha_terminacion_real = %s,
-
-                convenio_diferimiento = %s,
-                convenio_suspension = %s,
-
-                monto_ejercido = %s,
-                saldo = %s,
-
-                residente_obra = %s,
-
-                documentacion_relacionada = %s,
-                informacion_auditorias = %s
-
-            WHERE id_contrato = %s
-        """, (
-
-            request.form.get('no_contrato'),
-            request.form.get('fecha_contrato'),
-            request.form.get('contratista'),
-
-            request.form.get('inversion_autorizada'),
-            request.form.get('monto_contratado'),
-            request.form.get('anticipo'),
-
-            request.form.get('periodo_ejecucion'),
-            request.form.get('plazo_ejecucion'),
-
-            request.form.get('fecha_inicio_real'),
-            request.form.get('fecha_terminacion_real'),
-
-            request.form.get('convenio_diferimiento'),
-            request.form.get('convenio_suspension'),
-
-            request.form.get('monto_ejercido'),
-            request.form.get('saldo'),
-
-            request.form.get('residente_obra'),
-
-            request.form.get('documentacion_relacionada'),
-            request.form.get('informacion_auditorias'),
-
-            id_contrato
-        ))
-
-        conexion.commit()
-    
     busqueda = request.args.get('busqueda')
     pagina = request.args.get('pagina', 1, type=int)
 
@@ -426,12 +362,12 @@ def actualizar_proyecto():
 # ------------------------
 # RUTA PARA ELIMINAR PROYECTO
 # ------------------------
-@proyectos_bp.route('/eliminar_proyecto/<int:id>')
+@proyectos_bp.route('/eliminar_proyecto/<int:id>', methods=['POST'])
 @login_required
 @solo_admin
 def eliminar_proyecto(id):
     conexion = conectar_db()
-    cursor = conexion.cursor()
+    cursor = conexion.cursor(dictionary=True)
 
     cursor.execute("""
         SELECT nombre
@@ -439,6 +375,13 @@ def eliminar_proyecto(id):
         WHERE id_proyecto = %s
     """, (id,))
     proyecto = cursor.fetchone()
+
+    if not proyecto:
+
+        conexion.close()
+
+        return redirect('/')
+
     nombre_proyecto = proyecto['nombre']
 
     cursor.execute("DELETE FROM proyectos WHERE id_proyecto = %s", (id,))
