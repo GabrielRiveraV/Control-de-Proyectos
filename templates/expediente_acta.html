@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expediente del Acta</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background:#eef2f7; color:#263238; font-family:'Segoe UI', Tahoma, sans-serif; }
+        .page { width: min(1180px, 94%); margin: 24px auto 48px; }
+        .topbar { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:18px; }
+        .panel { background:white; border-radius:8px; box-shadow:0 4px 14px rgba(0,0,0,.08); margin-bottom:18px; overflow:hidden; }
+        .panel-title { background:#1e88e5; color:white; padding:12px 16px; font-weight:700; }
+        .panel-body { padding:18px; }
+        .grid-4 { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; }
+        .grid-2 { display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; }
+        label { font-weight:600; color:#34495e; margin-bottom:4px; }
+        .readonly { background:#f6f8fb; border:1px solid #dfe6ee; padding:8px 10px; border-radius:6px; min-height:38px; }
+        .row-table { display:grid; gap:8px; align-items:start; margin-bottom:8px; }
+        .conceptos { grid-template-columns: .7fr 3fr .7fr .9fr .8fr; }
+        .estimaciones { grid-template-columns: .6fr 3fr .7fr .9fr .9fr .9fr; }
+        .tramos { grid-template-columns: 1.4fr 2fr .8fr .7fr; }
+        .hallazgos { grid-template-columns: 1fr; }
+        .muted { color:#607d8b; font-size:13px; }
+        .media-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
+        .media-item { border:1px solid #dfe6ee; border-radius:8px; padding:10px; background:#f8fafc; }
+        .media-item img { width:100%; height:150px; object-fit:cover; border-radius:6px; border:1px solid #d9e2ec; }
+        .logo-acta { max-width:260px; margin-bottom:10px; }
+        .actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:10px; margin-top:16px; }
+        @media (max-width: 900px) { .grid-4, .grid-2, .row-table, .media-grid { grid-template-columns:1fr; } .topbar { flex-direction:column; } }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="topbar">
+        <div>
+            <img src="{{ url_for('static', filename='img/logo_centro.png') }}" alt="Centro" class="logo-acta">
+            <h1 class="h3 mb-1">Expediente del Acta</h1>
+            <div class="muted">Visita {{ visita.id_visita }} · Contrato {{ visita.no_contrato }}</div>
+        </div>
+        <div class="actions mt-0">
+            <a href="{{ url_for('ver_visitas') }}" class="btn btn-secondary">Volver</a>
+            <a href="{{ url_for('actas.imprimir_acta', id_visita=visita.id_visita) }}" target="_blank" class="btn btn-outline-primary">Vista imprimible</a>
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="panel">
+            <div class="panel-title">Información del proyecto y contrato</div>
+            <div class="panel-body">
+                <div class="grid-4">
+                    <div><label>Proyecto</label><div class="readonly">{{ visita.proyecto }}</div></div>
+                    <div><label>Programa</label><div class="readonly">{{ visita.programa }}</div></div>
+                    <div><label>Localidad</label><div class="readonly">{{ visita.localidad }}</div></div>
+                    <div><label>Ejercicio</label><div class="readonly">{{ visita.ejercicio_fiscal }}</div></div>
+                    <div><label>Contrato</label><div class="readonly">{{ visita.no_contrato }}</div></div>
+                    <div><label>Contratista</label><div class="readonly">{{ visita.contratista }}</div></div>
+                    <div><label>Monto contratado</label><div class="readonly">{{ visita.monto_contratado or '' }}</div></div>
+                    <div><label>Periodo</label><div class="readonly">{{ visita.periodo_ejecucion or '' }}</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Datos del acta</div>
+            <div class="panel-body">
+                <div class="grid-4">
+                    <div><label>Fecha del acta</label><input type="date" name="fecha_acta" class="form-control" value="{{ acta.fecha_acta or visita.fecha_visita }}"></div>
+                    <div><label>Situación de obra</label><input type="text" name="situacion_obra" class="form-control" value="{{ acta.situacion_obra or '' }}"></div>
+                    <div><label>Avance programado (%)</label><input type="number" step="0.01" name="avance_programado" class="form-control" value="{{ acta.avance_programado or '' }}"></div>
+                    <div><label>Avance físico (%)</label><input type="number" step="0.01" name="avance_fisico" class="form-control" value="{{ acta.avance_fisico or '' }}"></div>
+                </div>
+                <div class="mt-3"><label>Observación física</label><textarea name="observacion_fisica" rows="4" class="form-control">{{ acta.observacion_fisica or '' }}</textarea></div>
+                <div class="mt-3"><label>Notas</label><textarea name="notas" rows="3" class="form-control">{{ acta.notas or '' }}</textarea></div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Conceptos de obra</div>
+            <div class="panel-body" id="conceptos">
+                {% set filas = conceptos if conceptos else [None] %}
+                {% for c in filas %}
+                <div class="row-table conceptos">
+                    <input name="concepto_clave[]" class="form-control" placeholder="Clave" value="{{ c.clave if c else '' }}">
+                    <input name="concepto[]" class="form-control" placeholder="Concepto" value="{{ c.concepto if c else '' }}">
+                    <input name="concepto_unidad[]" class="form-control" placeholder="Unidad" value="{{ c.unidad if c else '' }}">
+                    <input name="concepto_importe[]" type="number" step="0.01" class="form-control" placeholder="Importe" value="{{ c.importe if c else '' }}">
+                    <input name="concepto_porcentaje[]" type="number" step="0.01" class="form-control" placeholder="% verif." value="{{ c.porcentaje_verificado if c else '' }}">
+                </div>
+                {% endfor %}
+            </div>
+            <div class="panel-body pt-0"><button type="button" class="btn btn-sm btn-outline-primary" onclick="addConcepto()">Agregar concepto</button></div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Verificación de estimaciones</div>
+            <div class="panel-body" id="estimaciones">
+                {% set filas = estimaciones if estimaciones else [None] %}
+                {% for e in filas %}
+                <div class="row-table estimaciones">
+                    <input name="estimacion_clave[]" class="form-control" placeholder="Clave" value="{{ e.clave if e else '' }}">
+                    <input name="estimacion_concepto[]" class="form-control" placeholder="Concepto" value="{{ e.concepto if e else '' }}">
+                    <input name="estimacion_unidad[]" class="form-control" placeholder="Unidad" value="{{ e.unidad if e else '' }}">
+                    <input name="cantidad_estimada[]" type="number" step="0.0001" class="form-control" placeholder="Cant. est." value="{{ e.cantidad_estimada if e else '' }}">
+                    <input name="cantidad_verificada[]" type="number" step="0.0001" class="form-control" placeholder="Cant. verif." value="{{ e.cantidad_verificada if e else '' }}">
+                    <input name="precio_unitario[]" type="number" step="0.01" class="form-control" placeholder="P.U." value="{{ e.precio_unitario if e else '' }}">
+                </div>
+                {% endfor %}
+            </div>
+            <div class="panel-body pt-0"><button type="button" class="btn btn-sm btn-outline-primary" onclick="addEstimacion()">Agregar estimación</button></div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Tramos y ubicaciones verificadas</div>
+            <div class="panel-body" id="tramos">
+                {% set filas = tramos if tramos else [None] %}
+                {% for t in filas %}
+                <div class="row-table tramos">
+                    <input name="tramo_ubicacion[]" class="form-control" placeholder="Ubicación" value="{{ t.ubicacion if t else '' }}">
+                    <input name="tramo_descripcion[]" class="form-control" placeholder="Tramo" value="{{ t.tramo if t else '' }}">
+                    <input name="tramo_volumen[]" type="number" step="0.01" class="form-control" placeholder="Volumen" value="{{ t.volumen if t else '' }}">
+                    <input name="tramo_unidad[]" class="form-control" placeholder="Unidad" value="{{ t.unidad if t else '' }}">
+                </div>
+                {% endfor %}
+            </div>
+            <div class="panel-body pt-0"><button type="button" class="btn btn-sm btn-outline-primary" onclick="addTramo()">Agregar tramo</button></div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Hallazgos</div>
+            <div class="panel-body" id="hallazgos">
+                {% set filas = hallazgos if hallazgos else [None] %}
+                {% for h in filas %}
+                <div class="row-table hallazgos">
+                    <textarea name="hallazgo[]" rows="2" class="form-control" placeholder="Describa el hallazgo">{{ h.descripcion if h else '' }}</textarea>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="panel-body pt-0"><button type="button" class="btn btn-sm btn-outline-primary" onclick="addHallazgo()">Agregar hallazgo</button></div>
+        </div>
+
+
+        <div class="panel">
+            <div class="panel-title">Croquis de ubicación y evidencias fotográficas</div>
+            <div class="panel-body">
+                <div class="grid-2">
+                    <div>
+                        <label>Croquis de ubicación</label>
+                        <input type="file" name="croquis_archivo" class="form-control" accept=".jpg,.jpeg,.png,.webp">
+                    </div>
+                    <div>
+                        <label>Título del croquis</label>
+                        <input type="text" name="croquis_titulo" class="form-control" value="Croquis de ubicación">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <label>Descripción del croquis</label>
+                    <textarea name="croquis_descripcion" rows="2" class="form-control"></textarea>
+                </div>
+
+                {% if croquis %}
+                <div class="media-grid mt-3">
+                    {% for item in croquis %}
+                    <div class="media-item">
+                        <img src="{{ url_for('static', filename=item.ruta_archivo) }}" alt="{{ item.titulo or 'Croquis' }}">
+                        <strong>{{ item.titulo or 'Croquis' }}</strong>
+                        <div class="muted">{{ item.descripcion or '' }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <hr>
+
+                <div id="evidencias">
+                    <div class="grid-4 mb-2">
+                        <div><label>Fotografía</label><input type="file" name="evidencia_archivo[]" class="form-control" accept=".jpg,.jpeg,.png,.webp"></div>
+                        <div><label>Título</label><input name="evidencia_titulo[]" class="form-control" placeholder="Ej. Trabajos en avenida"></div>
+                        <div class="grid-span"><label>Descripción</label><input name="evidencia_descripcion[]" class="form-control" placeholder="Descripción breve"></div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addEvidencia()">Agregar fotografía</button>
+
+                {% if fotos %}
+                <div class="media-grid mt-3">
+                    {% for foto in fotos %}
+                    <div class="media-item">
+                        <img src="{{ url_for('static', filename=foto.ruta_archivo) }}" alt="{{ foto.titulo or 'Evidencia' }}">
+                        <strong>{{ foto.titulo or 'Evidencia fotográfica' }}</strong>
+                        <div class="muted">{{ foto.descripcion or '' }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Firmas</div>
+            <div class="panel-body grid-2">
+                <div><label>Elaboró</label><input name="elaborado_por" class="form-control" value="{{ acta.elaborado_por or current_user.nombre }}"></div>
+                <div><label>Vo. Bo.</label><input name="vo_bo" class="form-control" value="{{ acta.vo_bo or '' }}"></div>
+                <div><label>Cargo elaboró</label><input name="cargo_elabora" class="form-control" value="{{ acta.cargo_elabora or 'Fiscalizacion de Obra' }}"></div>
+                <div><label>Cargo Vo. Bo.</label><input name="cargo_vo_bo" class="form-control" value="{{ acta.cargo_vo_bo or 'Jefe de Fiscalizacion' }}"></div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button type="submit" name="accion" value="guardar" class="btn btn-primary">Guardar borrador</button>
+            <button type="submit" name="accion" value="finalizar" class="btn btn-success">Finalizar acta</button>
+        </div>
+    </form>
+</div>
+
+<script>
+function appendRow(id, html) { document.getElementById(id).insertAdjacentHTML('beforeend', html); }
+function addConcepto() { appendRow('conceptos', `<div class="row-table conceptos"><input name="concepto_clave[]" class="form-control" placeholder="Clave"><input name="concepto[]" class="form-control" placeholder="Concepto"><input name="concepto_unidad[]" class="form-control" placeholder="Unidad"><input name="concepto_importe[]" type="number" step="0.01" class="form-control" placeholder="Importe"><input name="concepto_porcentaje[]" type="number" step="0.01" class="form-control" placeholder="% verif."></div>`); }
+function addEstimacion() { appendRow('estimaciones', `<div class="row-table estimaciones"><input name="estimacion_clave[]" class="form-control" placeholder="Clave"><input name="estimacion_concepto[]" class="form-control" placeholder="Concepto"><input name="estimacion_unidad[]" class="form-control" placeholder="Unidad"><input name="cantidad_estimada[]" type="number" step="0.0001" class="form-control" placeholder="Cant. est."><input name="cantidad_verificada[]" type="number" step="0.0001" class="form-control" placeholder="Cant. verif."><input name="precio_unitario[]" type="number" step="0.01" class="form-control" placeholder="P.U."></div>`); }
+function addTramo() { appendRow('tramos', `<div class="row-table tramos"><input name="tramo_ubicacion[]" class="form-control" placeholder="Ubicación"><input name="tramo_descripcion[]" class="form-control" placeholder="Tramo"><input name="tramo_volumen[]" type="number" step="0.01" class="form-control" placeholder="Volumen"><input name="tramo_unidad[]" class="form-control" placeholder="Unidad"></div>`); }
+function addHallazgo() { appendRow('hallazgos', `<div class="row-table hallazgos"><textarea name="hallazgo[]" rows="2" class="form-control" placeholder="Describa el hallazgo"></textarea></div>`); }
+function addEvidencia() { appendRow('evidencias', `<div class="grid-4 mb-2"><div><label>Fotografía</label><input type="file" name="evidencia_archivo[]" class="form-control" accept=".jpg,.jpeg,.png,.webp"></div><div><label>Título</label><input name="evidencia_titulo[]" class="form-control" placeholder="Ej. Trabajos en avenida"></div><div><label>Descripción</label><input name="evidencia_descripcion[]" class="form-control" placeholder="Descripción breve"></div></div>`); }
+</script>
+</body>
+</html>

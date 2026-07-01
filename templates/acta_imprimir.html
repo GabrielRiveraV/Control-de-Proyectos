@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Acta de Visita</title>
+    <style>
+        body { font-family: Arial, sans-serif; color:#1f2933; margin: 24px; }
+        .header { text-align:center; border-bottom:2px solid #1e88e5; padding-bottom:10px; margin-bottom:18px; }
+        .logo { max-width:300px; display:block; margin:0 auto 10px; }
+        .photo-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+        .photo-card { border:1px solid #cfd8dc; padding:8px; page-break-inside:avoid; }
+        .photo-card img { width:100%; height:220px; object-fit:cover; display:block; margin-bottom:6px; }
+        .croquis-img { max-width:100%; max-height:360px; display:block; margin:8px auto; border:1px solid #cfd8dc; }
+        .header h1 { font-size:18px; margin:0; text-transform:uppercase; }
+        .header h2 { font-size:15px; margin:8px 0 0; }
+        .section { margin-top:16px; page-break-inside:avoid; }
+        .title { background:#1e88e5; color:white; padding:7px 10px; font-weight:bold; }
+        .box { border:1px solid #cfd8dc; padding:10px; }
+        .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px 18px; }
+        .label { font-weight:bold; }
+        table { width:100%; border-collapse:collapse; margin-top:8px; font-size:12px; }
+        th, td { border:1px solid #b0bec5; padding:6px; vertical-align:top; }
+        th { background:#eef2f7; }
+        .signatures { display:grid; grid-template-columns:1fr 1fr; gap:40px; margin-top:60px; text-align:center; }
+        .line { border-top:1px solid #263238; padding-top:6px; }
+        .actions { text-align:right; margin-bottom:12px; }
+        @media print { .actions { display:none; } body { margin: 12mm; } }
+    </style>
+</head>
+<body>
+    <div class="actions"><button onclick="window.print()">Imprimir / Guardar PDF</button></div>
+
+    <div class="header">
+        <img src="{{ url_for('static', filename='img/logo_centro.png') }}" alt="Centro" class="logo">
+        <h1>Contraloría Municipal. Subdirección de Fiscalización de Obra Pública</h1>
+        <h2>Acta de Visita de Verificación</h2>
+    </div>
+
+    <div class="section">
+        <div class="title">Información general</div>
+        <div class="box grid">
+            <div><span class="label">Proyecto:</span> {{ visita.proyecto }}</div>
+            <div><span class="label">Fecha:</span> {{ acta.fecha_acta or visita.fecha_visita }}</div>
+            <div><span class="label">Contrato:</span> {{ visita.no_contrato }}</div>
+            <div><span class="label">Contratista:</span> {{ visita.contratista }}</div>
+            <div><span class="label">Programa:</span> {{ visita.programa }}</div>
+            <div><span class="label">Localidad:</span> {{ visita.localidad }}</div>
+            <div><span class="label">Residente:</span> {{ visita.residente_contrato or visita.residente_visita }}</div>
+            <div><span class="label">Fiscalizador:</span> {{ acta.elaborado_por }}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="title">Avance y situación física</div>
+        <div class="box">
+            <p><span class="label">Situación:</span> {{ acta.situacion_obra or '' }}</p>
+            <p><span class="label">Avance programado:</span> {{ acta.avance_programado or 0 }}% · <span class="label">Avance físico:</span> {{ acta.avance_fisico or 0 }}%</p>
+            <p>{{ acta.observacion_fisica or '' }}</p>
+            {% if acta.notas %}<p><span class="label">Notas:</span> {{ acta.notas }}</p>{% endif %}
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="title">Conceptos de obra</div>
+        <table>
+            <thead><tr><th>Clave</th><th>Concepto</th><th>Unidad</th><th>Importe</th><th>% verificado</th></tr></thead>
+            <tbody>
+                {% for c in conceptos %}<tr><td>{{ c.clave }}</td><td>{{ c.concepto }}</td><td>{{ c.unidad }}</td><td>{{ c.importe or '' }}</td><td>{{ c.porcentaje_verificado or '' }}</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="title">Verificación de estimaciones</div>
+        <table>
+            <thead><tr><th>Clave</th><th>Concepto</th><th>Unidad</th><th>Cant. est.</th><th>Cant. verif.</th><th>Diferencia</th><th>P.U.</th><th>Importe</th></tr></thead>
+            <tbody>
+                {% for e in estimaciones %}<tr><td>{{ e.clave }}</td><td>{{ e.concepto }}</td><td>{{ e.unidad }}</td><td>{{ e.cantidad_estimada or '' }}</td><td>{{ e.cantidad_verificada or '' }}</td><td>{{ e.diferencia or '' }}</td><td>{{ e.precio_unitario or '' }}</td><td>{{ e.importe or '' }}</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="title">Tramos verificados</div>
+        <table>
+            <thead><tr><th>Ubicación</th><th>Tramo</th><th>Volumen</th><th>Unidad</th></tr></thead>
+            <tbody>
+                {% for t in tramos %}<tr><td>{{ t.ubicacion }}</td><td>{{ t.tramo }}</td><td>{{ t.volumen or '' }}</td><td>{{ t.unidad }}</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="title">Hallazgos</div>
+        <div class="box">
+            {% for h in hallazgos %}<p>{{ h.descripcion }}</p>{% endfor %}
+        </div>
+    </div>
+
+
+    {% if croquis %}
+    <div class="section">
+        <div class="title">Croquis de ubicación</div>
+        <div class="box">
+            {% for item in croquis %}
+            <img src="{{ url_for('static', filename=item.ruta_archivo) }}" alt="{{ item.titulo or 'Croquis' }}" class="croquis-img">
+            <p><strong>{{ item.titulo or 'Croquis de ubicación' }}</strong></p>
+            {% if item.descripcion %}<p>{{ item.descripcion }}</p>{% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if fotos %}
+    <div class="section">
+        <div class="title">Evidencia fotográfica</div>
+        <div class="photo-grid">
+            {% for foto in fotos %}
+            <div class="photo-card">
+                <img src="{{ url_for('static', filename=foto.ruta_archivo) }}" alt="{{ foto.titulo or 'Evidencia' }}">
+                <strong>{{ foto.titulo or 'Evidencia fotográfica' }}</strong>
+                {% if foto.descripcion %}<p>{{ foto.descripcion }}</p>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="signatures">
+        <div><div class="line">{{ acta.elaborado_por or '' }}<br>{{ acta.cargo_elabora or '' }}</div></div>
+        <div><div class="line">{{ acta.vo_bo or '' }}<br>{{ acta.cargo_vo_bo or '' }}</div></div>
+    </div>
+</body>
+</html>

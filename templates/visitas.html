@@ -1,204 +1,100 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Visitas</title>
-
     <style>
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #eef2f7;
     margin: 0;
 }
-
-.container {
-    width: 90%;
-    margin: 30px auto;
-}
-
-/* HEADER */
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.header h1 {
-    color: #2c3e50;
-}
-
-/* BOTONES */
-.btn-main {
-    padding: 8px 12px;
-    background-color: #1e88e5;
-    color: white;
-    border-radius: 6px;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 14px;
-}
-
-.btn-main:hover {
-    background-color: #1565c0;
-}
-
-/* BUSCADOR */
-.buscador {
-    display: flex;
-    gap: 10px;
-}
-
-.buscador input {
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-}
-
-/* CARD */
-.card {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
-    padding: 20px;
-}
-
-/* TABLA */
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th {
-    background-color: #1e88e5;
-    color: white;
-    padding: 12px;
-    text-align: left;
-}
-
-td {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-    vertical-align: top;
-}
-
-tr:hover {
-    background-color: #f5f9ff;
-}
-
-/* OBS */
-.obs {
-    max-width: 300px;
-    word-wrap: break-word;
-}
+.container { width: 90%; margin: 30px auto; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+.header h1 { color: #2c3e50; margin: 0; }
+.btn-main, .btn-small { padding: 8px 12px; background-color: #1e88e5; color: white; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; border: none; display: inline-block; cursor: pointer; }
+.btn-main:hover, .btn-small:hover { background-color: #1565c0; color: white; }
+.btn-danger { background-color: #e74c3c; }
+.btn-danger:hover { background-color: #c0392b; }
+.buscador { display: flex; gap: 10px; }
+.buscador input { padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
+.card { background: white; border-radius: 10px; box-shadow: 0px 4px 12px rgba(0,0,0,0.08); padding: 20px; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { background-color: #1e88e5; color: white; padding: 12px; text-align: left; }
+td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+tr:hover { background-color: #f5f9ff; }
+.obs { max-width: 300px; word-wrap: break-word; }
+.acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.text-muted { color: #6c757d; }
     </style>
 </head>
-
 <body>
-
 <div class="container">
-
-    <!-- HEADER -->
     <div class="header">
-
         <form method="GET" action="/visitas" class="buscador">
-            <input type="text" name="busqueda" placeholder="Buscar por proyecto...">
-            <button type="submit" class="btn-main">🔍</button>
+            <input type="text" name="busqueda" placeholder="Buscar por proyecto..." value="{{ request.args.get('busqueda', '') }}">
+            <button type="submit" class="btn-main">Buscar</button>
         </form>
-
-        <h1>📝 Historial de Visitas</h1>
-
-        <a href="/" class="btn-main">⬅️ Volver</a>
+        <h1>Historial de Visitas</h1>
+        <a href="/" class="btn-main">Volver</a>
     </div>
 
-<!-- TABLA -->
-<div class="card">
-
-    <table>
-
-        <thead>
-            <tr>
-                <th>Contrato</th>
-                <th>Proyecto</th>
-                <th>Fecha</th>
-                <th>Supervisor</th>
-                <th>Residente</th>
-                <th>Observaciones</th>
-                <th>Acta</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-
-        <tbody>
-
-            {% for v in visitas %}
-
-            <tr>
-
-                <!-- DATOS -->
-                <td>{{ v[1] }}</td>
-                <td>{{ v[2] }}</td>
-                <td>{{ v[3] }}</td>
-                <td>{{ v[4] }}</td>
-                <td>{{ v[5] }}</td>
-
-                <!-- OBSERVACIONES -->
-                <td class="obs">
-                    {{ v[6] }}
-                </td>
-
-                <!-- ACTA -->
-                <td>
-
-                    {% if v[7] %}
-
-                        <a
-                            href="{{ url_for('static', filename='uploads/actas/' ~ v[7]) }}"
-                            target="_blank"
-                            class="btn btn-primary btn-sm"
-                        >
-                            📄 Ver acta
-                        </a>
-
-                    {% else %}
-
-                        <span class="text-muted">
-                            Sin archivo
-                        </span>
-
-                    {% endif %}
-
-                </td>
-
-                <!-- ACCIONES -->
-                <td>
-
-                    <form
-                        method="POST"
-                        action="{{ url_for('visitas.eliminar_visita', id_visita=v[0]) }}"
-                        onsubmit="return confirm('¿Eliminar esta visita?')"
-                    >
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                        <button type="submit" class="btn btn-danger btn-sm">
-                            Eliminar
-                        </button>
-                    </form>
-
-                </td>
-
-            </tr>
-
-            {% endfor %}
-
-        </tbody>
-
-    </table>
-
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Contrato</th>
+                    <th>Proyecto</th>
+                    <th>Fecha</th>
+                    <th>Supervisor</th>
+                    <th>Residente</th>
+                    <th>Observaciones</th>
+                    <th>Acta</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in visitas %}
+                <tr>
+                    <td>{{ v[1] }}</td>
+                    <td>{{ v[2] }}</td>
+                    <td>{{ v[3] }}</td>
+                    <td>{{ v[4] }}</td>
+                    <td>{{ v[5] }}</td>
+                    <td class="obs">{{ v[6] }}</td>
+                    <td>
+                        {% if v[7] %}
+                            <a href="{{ url_for('static', filename='uploads/actas/' ~ v[7]) }}" target="_blank" class="btn-small">Ver acta</a>
+                        {% else %}
+                            <span class="text-muted">Sin archivo</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="acciones">
+                            {% if current_user.rol == 'supervisor' %}
+                            <a href="{{ url_for('actas.expediente_acta', id_visita=v[0]) }}" class="btn-small">Generar acta</a>
+                            <form method="POST" action="{{ url_for('visitas.subir_acta', id_visita=v[0]) }}" enctype="multipart/form-data">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <label class="btn-small" title="Subir acta firmada">
+                                    Subir acta
+                                    <input type="file" name="archivo_acta" accept=".pdf,.xlsx,.xls" onchange="this.form.submit()" hidden>
+                                </label>
+                            </form>
+                            {% endif %}
+                            {% if current_user.rol == 'admin' %}
+                            <form method="POST" action="{{ url_for('visitas.eliminar_visita', id_visita=v[0]) }}" onsubmit="return confirm('¿Eliminar esta visita?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-small btn-danger">Eliminar</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
-
-</div>
-
 </body>
 </html>

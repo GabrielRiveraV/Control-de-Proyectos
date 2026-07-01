@@ -2,7 +2,6 @@ import mysql.connector
 
 from config import Config
 
-
 def conectar_db():
 
     return mysql.connector.connect(

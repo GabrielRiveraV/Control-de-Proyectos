@@ -28,6 +28,34 @@ def archivo_permitido(nombre_archivo):
         in current_app.config['ALLOWED_EXTENSIONS']
     )
 
+
+def guardar_archivo_acta(archivo):
+
+    import uuid
+
+    if not archivo or archivo.filename == '':
+        return None
+
+    if not archivo_permitido(archivo.filename):
+        return None
+
+    extension = archivo.filename.rsplit('.', 1)[1].lower()
+    nombre_archivo = secure_filename(f"acta_{uuid.uuid4().hex}.{extension}")
+
+    os.makedirs(
+        current_app.config['UPLOAD_FOLDER_ACTAS'],
+        exist_ok=True
+    )
+
+    archivo.save(
+        os.path.join(
+            current_app.config['UPLOAD_FOLDER_ACTAS'],
+            nombre_archivo
+        )
+    )
+
+    return nombre_archivo
+
 # ------------------------
 # NUEVA VISITA
 # ------------------------
@@ -106,25 +134,7 @@ def guardar_visita():
 
         if archivo_permitido(archivo.filename):
 
-            extension = archivo.filename.rsplit('.', 1)[1].lower()
-
-            nombre_archivo = (
-                f"acta_{uuid.uuid4().hex}.{extension}"
-            )
-
-            nombre_archivo = secure_filename(nombre_archivo)
-
-            os.makedirs(
-                current_app.config['UPLOAD_FOLDER_ACTAS'],
-                exist_ok=True
-            )
-
-            ruta_guardado = os.path.join(
-                current_app.config['UPLOAD_FOLDER_ACTAS'],
-                nombre_archivo
-            )
-
-            archivo.save(ruta_guardado)
+            nombre_archivo = guardar_archivo_acta(archivo)
 
         else:
 
@@ -182,6 +192,76 @@ def guardar_visita():
     )
 
     return redirect('/')
+
+
+# ------------------------
+# SUBIR / REEMPLAZAR ACTA FIRMADA
+# ------------------------
+@visitas_bp.route('/subir_acta/<int:id_visita>', methods=['POST'])
+@login_required
+def subir_acta(id_visita):
+
+    if current_user.rol != 'supervisor':
+        flash('Solo los supervisores pueden subir actas firmadas.', 'danger')
+        return redirect(request.referrer or '/')
+
+    archivo = request.files.get('archivo_acta')
+
+    if not archivo or archivo.filename == '':
+        flash('Selecciona un archivo de acta.', 'danger')
+        return redirect(request.referrer or '/')
+
+    nombre_archivo = guardar_archivo_acta(archivo)
+
+    if not nombre_archivo:
+        flash('Archivo no permitido. Solo PDF, XLSX o XLS.', 'danger')
+        return redirect(request.referrer or '/')
+
+    conexion = conectar_db()
+    cursor = conexion.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT archivo_acta
+        FROM visitas
+        WHERE id_visita = %s
+    """, (id_visita,))
+
+    visita = cursor.fetchone()
+
+    if not visita:
+        conexion.close()
+        flash('La visita no existe.', 'danger')
+        return redirect(request.referrer or '/')
+
+    if visita['archivo_acta']:
+        ruta_anterior = visita['archivo_acta']
+        if not os.path.dirname(ruta_anterior):
+            ruta_anterior = os.path.join(
+                current_app.config['UPLOAD_FOLDER_ACTAS'],
+                ruta_anterior
+            )
+        ruta_anterior = os.path.normpath(ruta_anterior)
+        if os.path.exists(ruta_anterior):
+            os.remove(ruta_anterior)
+
+    cursor.execute("""
+        UPDATE visitas
+        SET archivo_acta = %s
+        WHERE id_visita = %s
+    """, (nombre_archivo, id_visita))
+
+    registrar_auditoria(
+        current_user.nombre,
+        f'Subio acta firmada de visita ID {id_visita}',
+        'visitas',
+        request.remote_addr
+    )
+
+    conexion.commit()
+    conexion.close()
+
+    flash('Acta firmada subida correctamente.', 'success')
+    return redirect(request.referrer or '/')
 
 # ------------------------
 # ELIMINAR VISITA
