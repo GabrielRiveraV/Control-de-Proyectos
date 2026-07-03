@@ -143,9 +143,18 @@ input:focus, select:focus {
             <label>Contratista:</label>
             <input type="text" name="contratista" placeholder="Nombre del contratista" required>
 
-            <!-- MONTO -->
             <label>Monto:</label>
             <input type="number" name="monto" step="0.01" placeholder="Ej. 150000.50" required>
+
+            <label>Estatus del contrato:</label>
+            <select name="estatus_contrato" required>
+                <option value="En ejecucion" selected>En ejecucion</option>
+                <option value="Suspendido">Suspendido</option>
+                <option value="Terminado">Terminado</option>
+                <option value="En revision">En revision</option>
+                <option value="Observado">Observado</option>
+                <option value="Cerrado">Cerrado</option>
+            </select>
 
             <label>Contrato PDF:</label>
             <input

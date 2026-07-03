@@ -21,6 +21,25 @@ contratos_bp = Blueprint(
     __name__
 )
 
+
+def guardar_pdf_contrato(archivo_pdf):
+
+    import uuid
+
+    if not archivo_pdf or archivo_pdf.filename == '':
+        return None
+
+    if not archivo_pdf.filename.lower().endswith('.pdf'):
+        return None
+
+    extension = archivo_pdf.filename.rsplit('.', 1)[1].lower()
+    nombre_archivo = secure_filename(f"{uuid.uuid4().hex}.{extension}")
+    carpeta = 'static/uploads/contratos'
+    os.makedirs(carpeta, exist_ok=True)
+    archivo_pdf.save(os.path.join(carpeta, nombre_archivo))
+
+    return nombre_archivo
+
 # ------------------------
 # NUEVO CONTRATO
 # ------------------------
@@ -60,6 +79,7 @@ def guardar_contrato():
     fecha = request.form['fecha']
     contratista = request.form['contratista']
     monto = request.form['monto']
+    estatus_contrato = request.form.get('estatus_contrato') or 'En ejecucion'
 
     conexion = conectar_db()
     cursor = conexion.cursor()
@@ -75,21 +95,7 @@ def guardar_contrato():
 
         if archivo_pdf.filename.lower().endswith('.pdf'):
 
-            # EVITAR NOMBRES DUPLICADOS
-            extension = archivo_pdf.filename.rsplit('.', 1)[1].lower()
-
-            nombre_archivo = (
-                f"{uuid.uuid4().hex}.{extension}"
-            )
-
-            nombre_archivo = secure_filename(nombre_archivo)
-
-            ruta_guardado = os.path.join(
-                'static/uploads/contratos',
-                nombre_archivo
-            )
-
-            archivo_pdf.save(ruta_guardado)
+            nombre_archivo = guardar_pdf_contrato(archivo_pdf)
 
             registrar_auditoria(
                 current_user.nombre,
@@ -108,9 +114,10 @@ def guardar_contrato():
             fecha_contrato,
             contratista,
             monto_contratado,
-            archivo_contrato
+            archivo_contrato,
+            estatus_contrato
         )
-        VALUES (%s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
     """
 
     try:
@@ -123,7 +130,8 @@ def guardar_contrato():
                 fecha,
                 contratista,
                 monto,
-                nombre_archivo
+                nombre_archivo,
+                estatus_contrato
             )
         )
 
@@ -192,6 +200,65 @@ def ver_contrato(id_contrato):
         contrato[0]
     )
     
+
+#-----------------------------
+# REEMPLAZAR PDF DEL CONTRATO
+#-----------------------------
+@contratos_bp.route('/reemplazar_contrato_pdf/<int:id_contrato>', methods=['POST'])
+@login_required
+@solo_admin
+def reemplazar_contrato_pdf(id_contrato):
+
+    archivo_pdf = request.files.get('archivo_contrato')
+    nombre_archivo = guardar_pdf_contrato(archivo_pdf)
+
+    if not nombre_archivo:
+        flash('Archivo no permitido. Solo se aceptan PDF.', 'danger')
+        return redirect(url_for('proyectos.expediente_contrato', id_contrato=id_contrato))
+
+    conexion = conectar_db()
+    cursor = conexion.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT archivo_contrato, no_contrato
+        FROM contratos
+        WHERE id_contrato = %s
+    """, (id_contrato,))
+
+    contrato = cursor.fetchone()
+
+    if not contrato:
+        conexion.close()
+        flash('Contrato no encontrado.', 'danger')
+        return redirect(url_for('proyectos.inicio'))
+
+    if contrato['archivo_contrato']:
+        ruta_anterior = os.path.join(
+            'static/uploads/contratos',
+            contrato['archivo_contrato']
+        )
+        if os.path.exists(ruta_anterior):
+            os.remove(ruta_anterior)
+
+    cursor.execute("""
+        UPDATE contratos
+        SET archivo_contrato = %s
+        WHERE id_contrato = %s
+    """, (nombre_archivo, id_contrato))
+
+    registrar_auditoria(
+        current_user.nombre,
+        f'Reemplazo PDF del contrato: {contrato["no_contrato"]}',
+        'contratos',
+        request.remote_addr
+    )
+
+    conexion.commit()
+    conexion.close()
+
+    flash('PDF del contrato reemplazado correctamente.', 'success')
+    return redirect(url_for('proyectos.expediente_contrato', id_contrato=id_contrato))
+
 #-----------------------------
 # ELIMINAR CONTRATO
 #-----------------------------

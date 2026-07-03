@@ -47,9 +47,32 @@
 
 <div class="container mt-4 mb-5">
 
-    <h2 class="mb-4">
-        📂 Expediente de Contrato
-    </h2>
+    <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
+        <h2 class="mb-0">
+            Expediente de Contrato
+        </h2>
+
+        {% if current_user.rol == 'admin' %}
+        <form
+            method="POST"
+            action="{{ url_for('contratos.reemplazar_contrato_pdf', id_contrato=contrato.id_contrato) }}"
+            enctype="multipart/form-data"
+            class="d-flex gap-2 align-items-center"
+        >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label class="btn btn-outline-primary mb-0">
+                Reemplazar PDF del Contrato
+                <input
+                    type="file"
+                    name="archivo_contrato"
+                    accept=".pdf"
+                    onchange="this.form.submit()"
+                    hidden
+                >
+            </label>
+        </form>
+        {% endif %}
+    </div>
 
     <form method="POST">
 
@@ -255,6 +278,16 @@
                             value="{{ contrato.monto_contratado or '' }}"
                         >
 
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Estatus del contrato</label>
+                        <select name="estatus_contrato" class="form-control" required>
+                            {% set estatus_actual = contrato.estatus_contrato or 'En ejecucion' %}
+                            {% for estatus in ['En ejecucion', 'Suspendido', 'Terminado', 'En revision', 'Observado', 'Cerrado'] %}
+                                <option value="{{ estatus }}" {% if estatus_actual == estatus %}selected{% endif %}>{{ estatus }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
 
                 </div>

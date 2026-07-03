@@ -68,8 +68,10 @@ def inicio():
             p.localidad, 
             p.inversion_autorizada,
             p.ejercicio_fiscal,
+            p.estatus_proyecto,
 
             c.no_contrato,
+            c.estatus_contrato,
 
             COUNT(v.id_visita) as total_visitas,
 
@@ -100,7 +102,9 @@ def inicio():
             p.localidad,
             p.inversion_autorizada,
             p.ejercicio_fiscal,
+            p.estatus_proyecto,
             c.no_contrato,
+            c.estatus_contrato,
             c.id_contrato,
             c.archivo_contrato
             
@@ -132,8 +136,10 @@ def inicio():
                 p.localidad,
                 p.inversion_autorizada,
                 p.ejercicio_fiscal,
+                p.estatus_proyecto,
 
                 c.no_contrato,
+                c.estatus_contrato,
 
                 COUNT(v.id_visita) as total_visitas,
 
@@ -161,7 +167,9 @@ def inicio():
                 p.localidad,
                 p.inversion_autorizada,
                 p.ejercicio_fiscal,
+                p.estatus_proyecto,
                 c.no_contrato,
+                c.estatus_contrato,
                 c.id_contrato,
                 c.archivo_contrato
 
@@ -264,6 +272,7 @@ def guardar_proyecto():
     localidad = request.form['localidad']
     inversion = request.form['inversion']
     ejercicio_fiscal = request.form['ejercicio_fiscal']
+    estatus_proyecto = request.form.get('estatus_proyecto') or 'Planeacion'
 
     conexion = conectar_db()
     cursor = conexion.cursor()
@@ -275,9 +284,10 @@ def guardar_proyecto():
             un_ad,
             localidad,
             inversion_autorizada,
-            ejercicio_fiscal
+            ejercicio_fiscal,
+            estatus_proyecto
         )
-        VALUES (%s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
     """
 
     valores = (
@@ -286,7 +296,8 @@ def guardar_proyecto():
         un_ad,
         localidad,
         inversion,
-        ejercicio_fiscal
+        ejercicio_fiscal,
+        estatus_proyecto
     )
 
     cursor.execute(sql, valores)
@@ -333,17 +344,18 @@ def actualizar_proyecto():
     un_ad = request.form['un_ad']
     localidad = request.form['localidad']
     inversion = request.form['inversion']
+    estatus_proyecto = request.form.get('estatus_proyecto') or 'Planeacion'
 
     conexion = conectar_db()
     cursor = conexion.cursor()
 
     sql = """
         UPDATE proyectos
-        SET nombre=%s, programa=%s, un_ad=%s, localidad=%s, inversion_autorizada=%s
+        SET nombre=%s, programa=%s, un_ad=%s, localidad=%s, inversion_autorizada=%s, estatus_proyecto=%s
         WHERE id_proyecto=%s
     """
 
-    valores = (nombre, programa, un_ad, localidad, inversion, id)
+    valores = (nombre, programa, un_ad, localidad, inversion, estatus_proyecto, id)
 
     cursor.execute(sql, valores)
     
@@ -472,6 +484,7 @@ def expediente_contrato(id_contrato):
         residente_obra = request.form.get('residente_obra') or None
         documentacion_relacionada = request.form.get('documentacion_relacionada') or None
         informacion_auditorias = request.form.get('informacion_auditorias') or None
+        estatus_contrato = request.form.get('estatus_contrato') or 'En ejecucion'
 
         cursor.execute("""
             UPDATE contratos
@@ -492,7 +505,8 @@ def expediente_contrato(id_contrato):
                 saldo = %s,
                 residente_obra = %s,
                 documentacion_relacionada = %s,
-                informacion_auditorias = %s
+                informacion_auditorias = %s,
+                estatus_contrato = %s
             WHERE id_contrato = %s
         """, (
 
@@ -513,6 +527,7 @@ def expediente_contrato(id_contrato):
             residente_obra,
             documentacion_relacionada,
             informacion_auditorias,
+            estatus_contrato,
             id_contrato))
         
         conexion.commit()
@@ -534,7 +549,8 @@ def expediente_contrato(id_contrato):
             p.programa,
             p.un_ad,
             p.localidad,
-            p.ejercicio_fiscal
+            p.ejercicio_fiscal,
+            p.estatus_proyecto
 
         FROM contratos c
 

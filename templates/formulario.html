@@ -35,7 +35,7 @@ label {
     margin-top: 12px;
 }
 
-input {
+input, select {
     width: 100%;
     padding: 10px;
     margin-top: 5px;
@@ -134,6 +134,18 @@ input:focus {
             <!-- INVERSIÓN -->
             <label>Inversión Autorizada:</label>
             <input type="number" name="inversion" step="0.01" placeholder="Ej. 1500000.50" required>
+
+            <label>Estatus del proyecto:</label>
+            <select name="estatus_proyecto" required>
+                <option value="Planeacion" selected>Planeacion</option>
+                <option value="Contratado">Contratado</option>
+                <option value="En ejecucion">En ejecucion</option>
+                <option value="Suspendido">Suspendido</option>
+                <option value="Terminado">Terminado</option>
+                <option value="En revision">En revision</option>
+                <option value="Observado">Observado</option>
+                <option value="Cerrado">Cerrado</option>
+            </select>
 
             <!-- BOTONES -->
             <div class="botones">

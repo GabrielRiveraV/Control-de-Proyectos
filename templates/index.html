@@ -328,6 +328,33 @@ tbody tr:hover {
     transition: width .4s ease;
 }
 
+.badge-estatus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 96px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.badge-ok {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.badge-alerta {
+    background: #fff3cd;
+    color: #664d03;
+}
+
+.badge-riesgo {
+    background: #f8d7da;
+    color: #842029;
+}
+
     </style>
 
 </head>
@@ -402,6 +429,12 @@ tbody tr:hover {
 
             {% endif %}
 
+            {% if current_user.rol in ['admin', 'jefe'] %}
+            <a href="{{ url_for('dashboard.ejecutivo') }}" class="btn-main">
+                Dashboard ejecutivo
+            </a>
+            {% endif %}
+
             <a href="/visitas" class="btn-main">
                 📊 Visitas
             </a>
@@ -455,6 +488,7 @@ tbody tr:hover {
                     <th>Inversión</th>
                     <th>Ejercicio</th>
                     <th>Contrato</th>
+                    <th>Estatus</th>
                     <th>Visitas</th>
                     <th>Acciones</th>
                 </tr>
@@ -492,6 +526,14 @@ tbody tr:hover {
                     <!-- CONTRATO -->
                     <td>
                         {{ proyecto.no_contrato if proyecto.no_contrato else 'Sin contrato' }}
+                    </td>
+
+                    <td>
+                        {% set estatus_visible = proyecto.estatus_contrato if proyecto.estatus_contrato else proyecto.estatus_proyecto %}
+                        {% set badge_class = 'badge-ok' if estatus_visible in ['Terminado', 'Cerrado'] else ('badge-riesgo' if estatus_visible in ['Suspendido', 'Observado'] else 'badge-alerta') %}
+                        <span class="badge-estatus {{ badge_class }}">
+                            {{ estatus_visible or 'Sin estatus' }}
+                        </span>
                     </td>
 
                     <!-- VISITAS -->
@@ -615,7 +657,7 @@ tbody tr:hover {
                                         target="_blank">
 
                                             <i class="bi bi-file-earmark-pdf"></i>
-                                            Ver PDF
+                                            Ver PDF del Contrato
 
                                         </a>
 

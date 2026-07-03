@@ -9,6 +9,7 @@ from routes.contratos import contratos_bp
 from routes.proyectos import proyectos_bp
 from routes.visitas import visitas_bp
 from routes.actas import actas_bp
+from routes.dashboard import dashboard_bp
 from database import conectar_db
 from functools import wraps
 from dotenv import load_dotenv
@@ -61,6 +62,7 @@ app.register_blueprint(proyectos_bp)
 app.register_blueprint(contratos_bp)
 app.register_blueprint(visitas_bp)
 app.register_blueprint(actas_bp)
+app.register_blueprint(dashboard_bp)
 @login_manager.user_loader
 def load_user(user_id):
 
