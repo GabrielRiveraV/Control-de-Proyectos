@@ -107,6 +107,16 @@ input:focus {
             <label>Localidad:</label>
             <input type="text" name="localidad" value="{{ proyecto[4] }}" required>
 
+            <label>Zona:</label>
+            <select name="tipo_zona" required>
+                {% set zona_actual = proyecto[8] if proyecto|length > 8 and proyecto[8] else 'Urbana' %}
+                {% for zona in ['Urbana', 'Rural'] %}
+                    <option value="{{ zona }}" {% if zona_actual == zona %}selected{% endif %}>
+                        {{ zona }}
+                    </option>
+                {% endfor %}
+            </select>
+
             <label>Inversión autorizada:</label>
             <input type="number" step="0.01" name="inversion" value="{{ proyecto[5] }}" required>
 

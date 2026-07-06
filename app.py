@@ -10,6 +10,7 @@ from routes.proyectos import proyectos_bp
 from routes.visitas import visitas_bp
 from routes.actas import actas_bp
 from routes.dashboard import dashboard_bp
+from routes.observaciones import observaciones_bp
 from database import conectar_db
 from functools import wraps
 from dotenv import load_dotenv
@@ -63,6 +64,7 @@ app.register_blueprint(contratos_bp)
 app.register_blueprint(visitas_bp)
 app.register_blueprint(actas_bp)
 app.register_blueprint(dashboard_bp)
+app.register_blueprint(observaciones_bp)
 @login_manager.user_loader
 def load_user(user_id):
 
@@ -207,7 +209,7 @@ def visitas_proyecto(id_proyecto):
     return render_template('visitas_proyecto.html', visitas=visitas)
 
 # ------------------------
-# EJECUCIÃ“N
+# EJECUCIÓN
 # ------------------------
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)

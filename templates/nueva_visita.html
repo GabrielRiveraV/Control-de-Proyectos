@@ -1,265 +1,284 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
+
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nueva Visita</title>
 
     <style>
+        :root {
+            --bg: #f3f6fa;
+            --card: #ffffff;
+            --text: #1f2937;
+            --muted: #667085;
+            --line: #d9e2ec;
+            --primary: #0f5b99;
+            --primary-dark: #0b4778;
+            --warning-bg: #fff7ed;
+            --warning-line: #fed7aa;
+            --warning-text: #9a3412;
+        }
 
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #eef2f7;
-    margin: 0;
-}
+        * {
+            box-sizing: border-box;
+        }
 
-.container {
-    width: 40%;
-    margin: 40px auto;
-}
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+        }
 
-.card {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
-}
+        .page {
+            margin: 0 auto;
+            max-width: 980px;
+            padding: 36px 20px;
+        }
 
-h2 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #2c3e50;
-}
+        .page-header {
+            margin-bottom: 18px;
+        }
 
-label {
-    font-weight: bold;
-    display: block;
-    margin-top: 12px;
-}
+        .eyebrow {
+            color: var(--primary);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: .04em;
+            margin: 0 0 6px;
+            text-transform: uppercase;
+        }
 
-input,
-textarea {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    transition: 0.2s;
-    font-size: 14px;
-    box-sizing: border-box;
-}
+        h1 {
+            font-size: 28px;
+            margin: 0;
+        }
 
-input:focus,
-textarea:focus {
-    border-color: #1e88e5;
-    outline: none;
-}
+        .subtitle {
+            color: var(--muted);
+            font-size: 15px;
+            margin: 8px 0 0;
+        }
 
-textarea {
-    resize: vertical;
-    min-height: 80px;
-}
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: 0 12px 28px rgba(16, 24, 40, .08);
+            overflow: hidden;
+        }
 
-/* CONTRATO BOX */
-.contrato-box {
-    background:#e8f4ff;
-    padding:10px;
-    border-radius:6px;
-    border:1px solid #b6d4fe;
-    margin-top:5px;
-    font-weight:bold;
-}
+        .section {
+            border-bottom: 1px solid var(--line);
+            padding: 24px;
+        }
 
-/* ALERTA */
-.alerta {
-    background: #fdecea;
-    color: #c0392b;
-    padding: 10px;
-    border-radius: 6px;
-    margin-top: 10px;
-    text-align: center;
-}
+        .section:last-of-type {
+            border-bottom: 0;
+        }
 
-/* SUBIDA ARCHIVO */
-.archivo-info {
-    font-size: 13px;
-    color: #555;
-    margin-top: 5px;
-}
+        .section-title {
+            font-size: 16px;
+            margin: 0 0 18px;
+        }
 
-/* BOTONES */
-.botones {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
+        .form-grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
 
-.btn {
-    padding: 10px 15px;
-    border-radius: 6px;
-    text-decoration: none;
-    color: white;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-}
+        .field.full {
+            grid-column: 1 / -1;
+        }
 
-.guardar {
-    background-color: #28a745;
-}
+        label {
+            color: #344054;
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
 
-.guardar:hover {
-    background-color: #218838;
-}
+        input,
+        textarea {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 15px;
+            min-height: 42px;
+            outline: none;
+            padding: 10px 12px;
+            transition: border-color .15s ease, box-shadow .15s ease;
+            width: 100%;
+        }
 
-.cancelar {
-    background-color: #e74c3c;
-}
+        textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
 
-.cancelar:hover {
-    background-color: #c0392b;
-}
+        input:focus,
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(15, 91, 153, .14);
+        }
 
-.crear {
-    background-color: #1e88e5;
-    display: inline-block;
-    margin-top: 10px;
-}
+        .readonly-box {
+            background: #f8fafc;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            color: #344054;
+            min-height: 42px;
+            padding: 10px 12px;
+        }
 
-.crear:hover {
-    background-color: #1565c0;
-}
+        .alerta {
+            background: var(--warning-bg);
+            border: 1px solid var(--warning-line);
+            border-radius: 6px;
+            color: var(--warning-text);
+            font-weight: 700;
+            padding: 12px;
+        }
 
+        .file-note {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .actions {
+            align-items: center;
+            background: #f8fafc;
+            border-top: 1px solid var(--line);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding: 18px 24px;
+        }
+
+        .btn {
+            align-items: center;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            font-size: 15px;
+            font-weight: 700;
+            height: 42px;
+            justify-content: center;
+            min-width: 138px;
+            padding: 0 18px;
+            text-decoration: none;
+        }
+
+        .guardar,
+        .crear {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .guardar:hover,
+        .crear:hover {
+            background: var(--primary-dark);
+        }
+
+        .cancelar {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: #344054;
+        }
+
+        .cancelar:hover {
+            background: #f1f5f9;
+        }
+
+        @media (max-width: 720px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                align-items: stretch;
+                flex-direction: column-reverse;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 
 <body>
 
-<div class="container">
+<main class="page">
+    <header class="page-header">
+        <p class="eyebrow">Seguimiento de obra</p>
+        <h1>Registrar visita</h1>
+        <p class="subtitle">Documenta la visita, responsables y evidencia asociada.</p>
+    </header>
 
-    <div class="card">
-
-        <h2>📝 Registrar Visita</h2>
-
-        <!-- IMPORTANTE:
-             enctype="multipart/form-data"
-             para permitir subida de archivos
-        -->
-
-        <form
-            action="/guardar_visita"
-            method="POST"
-            enctype="multipart/form-data"
-        >
+    <form action="/guardar_visita" method="POST" enctype="multipart/form-data" class="card">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <!-- CONTRATO -->
-            <label>Contrato:</label>
+        <section class="section">
+            <h2 class="section-title">Contrato asociado</h2>
 
             {% if contrato %}
-
-                <!-- INPUT OCULTO -->
-                <input
-                    type="hidden"
-                    name="id_contrato"
-                    value="{{ contrato[0] }}"
-                >
-
-                <div class="contrato-box">
-                    📄 {{ contrato[1] }}
-                </div>
-
+                <input type="hidden" name="id_contrato" value="{{ contrato[0] }}">
+                <div class="readonly-box">{{ contrato[1] }}</div>
             {% else %}
+                <div class="alerta">Este proyecto no tiene contrato asignado.</div>
+                <div style="margin-top: 12px;">
+                    <a href="/nuevo_contrato" class="btn crear">Crear contrato</a>
+                </div>
+            {% endif %}
+        </section>
 
-                <div class="alerta">
-                    ⚠️ Este proyecto no tiene contrato asignado
+        <section class="section">
+            <h2 class="section-title">Datos de la visita</h2>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label>Fecha</label>
+                    <input type="date" name="fecha" required>
                 </div>
 
-                <a href="/nuevo_contrato" class="btn crear">
-                    ➕ Crear contrato
-                </a>
+                <div class="field">
+                    <label>Supervisor</label>
+                    <input type="text" name="supervisor" placeholder="Nombre del supervisor" required>
+                </div>
 
-            {% endif %}
+                <div class="field">
+                    <label>Residente de obra</label>
+                    <input type="text" name="residente" placeholder="Nombre del residente" required>
+                </div>
 
-            <!-- FECHA -->
-            <label>Fecha:</label>
+                <div class="field full">
+                    <label>Observaciones</label>
+                    <textarea name="observaciones" placeholder="Describe lo observado..."></textarea>
+                </div>
 
-            <input
-                type="date"
-                name="fecha"
-                required
-            >
-
-            <!-- SUPERVISOR -->
-            <label>Supervisor:</label>
-
-            <input
-                type="text"
-                name="supervisor"
-                placeholder="Nombre del supervisor"
-                required
-            >
-
-            <!-- RESIDENTE -->
-            <label>Residente de obra:</label>
-
-            <input
-                type="text"
-                name="residente"
-                placeholder="Nombre del residente"
-                required
-            >
-
-            <!-- OBSERVACIONES -->
-            <label>Observaciones:</label>
-
-            <textarea
-                name="observaciones"
-                placeholder="Describe lo observado..."
-            ></textarea>
-
-            <!-- ACTA PDF / EXCEL -->
-            <label>Acta de visita:</label>
-
-            <input
-                type="file"
-                name="archivo_acta"
-                accept=".pdf,.xlsx,.xls"
-            >
-
-            <div class="archivo-info">
-                📎 Formatos permitidos:
-                PDF, XLSX, XLS
-                <br>
-                Tamaño máximo recomendado: 10 MB
+                <div class="field full">
+                    <label>Acta de visita</label>
+                    <input type="file" name="archivo_acta" accept=".pdf,.xlsx,.xls">
+                    <div class="file-note">Formatos permitidos: PDF, XLSX, XLS. Tamaño máximo recomendado: 10 MB.</div>
+                </div>
             </div>
+        </section>
 
-            <!-- BOTONES -->
-            {% if contrato %}
-
-            <div class="botones">
-
-                <button
-                    type="submit"
-                    class="btn guardar"
-                >
-                    💾 Guardar
-                </button>
-
-                <a
-                    href="/"
-                    class="btn cancelar"
-                >
-                    Cancelar
-                </a>
-
-            </div>
-
-            {% endif %}
-
-        </form>
-
-    </div>
-
-</div>
+        {% if contrato %}
+        <div class="actions">
+            <a href="/" class="btn cancelar">Cancelar</a>
+            <button type="submit" class="btn guardar">Guardar visita</button>
+        </div>
+        {% endif %}
+    </form>
+</main>
 
 </body>
 </html>

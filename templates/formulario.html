@@ -1,162 +1,259 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registrar Proyecto</title>
 
     <style>
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #eef2f7;
-    margin: 0;
-}
+        :root {
+            --bg: #f3f6fa;
+            --card: #ffffff;
+            --text: #1f2937;
+            --muted: #667085;
+            --line: #d9e2ec;
+            --primary: #0f5b99;
+            --primary-dark: #0b4778;
+        }
 
-.container {
-    width: 40%;
-    margin: 40px auto;
-}
+        * {
+            box-sizing: border-box;
+        }
 
-.card {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
-}
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+        }
 
-h2 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #2c3e50;
-}
+        .page {
+            margin: 0 auto;
+            max-width: 980px;
+            padding: 36px 20px;
+        }
 
-label {
-    font-weight: bold;
-    display: block;
-    margin-top: 12px;
-}
+        .page-header {
+            margin-bottom: 18px;
+        }
 
-input, select {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    transition: 0.2s;
-    font-size: 14px;
-}
+        .eyebrow {
+            color: var(--primary);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: .04em;
+            margin: 0 0 6px;
+            text-transform: uppercase;
+        }
 
-input:focus {
-    border-color: #1e88e5;
-    outline: none;
-}
+        h1 {
+            font-size: 28px;
+            margin: 0;
+        }
 
-/* BOTONES */
-.botones {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
+        .subtitle {
+            color: var(--muted);
+            font-size: 15px;
+            margin: 8px 0 0;
+        }
 
-.btn {
-    padding: 10px 15px;
-    border-radius: 6px;
-    text-decoration: none;
-    color: white;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-}
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: 0 12px 28px rgba(16, 24, 40, .08);
+            overflow: hidden;
+        }
 
-.guardar {
-    background-color: #28a745;
-}
+        .section {
+            padding: 24px;
+        }
 
-.guardar:hover {
-    background-color: #218838;
-}
+        .section-title {
+            font-size: 16px;
+            margin: 0 0 18px;
+        }
 
-.cancelar {
-    background-color: #e74c3c;
-}
+        .form-grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
 
-.cancelar:hover {
-    background-color: #c0392b;
-}
+        .field.full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            color: #344054;
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        input,
+        select {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 15px;
+            min-height: 42px;
+            outline: none;
+            padding: 10px 12px;
+            transition: border-color .15s ease, box-shadow .15s ease;
+            width: 100%;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(15, 91, 153, .14);
+        }
+
+        .actions {
+            align-items: center;
+            background: #f8fafc;
+            border-top: 1px solid var(--line);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding: 18px 24px;
+        }
+
+        .btn {
+            align-items: center;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            font-size: 15px;
+            font-weight: 700;
+            height: 42px;
+            justify-content: center;
+            min-width: 138px;
+            padding: 0 18px;
+            text-decoration: none;
+        }
+
+        .guardar {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .guardar:hover {
+            background: var(--primary-dark);
+        }
+
+        .cancelar {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: #344054;
+        }
+
+        .cancelar:hover {
+            background: #f1f5f9;
+        }
+
+        @media (max-width: 720px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                align-items: stretch;
+                flex-direction: column-reverse;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 
 <body>
 
-<div class="container">
-    <div class="card">
+<main class="page">
+    <header class="page-header">
+        <p class="eyebrow">Control de proyectos</p>
+        <h1>Registrar proyecto</h1>
+        <p class="subtitle">Captura la información general del proyecto de obra.</p>
+    </header>
 
-        <h2>📁 Registrar Proyecto</h2>
-
-        <form action="/guardar_proyecto" method="POST">
+    <form action="/guardar_proyecto" method="POST" class="card">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <div class="mb-3">
+        <section class="section">
+            <h2 class="section-title">Datos generales</h2>
 
-                <label class="form-label">
-                    Ejercicio fiscal
-                </label>
+            <div class="form-grid">
+                <div class="field">
+                    <label>Ejercicio fiscal</label>
+                    <select name="ejercicio_fiscal" required>
+                        <option value="2025">2025</option>
+                        <option value="2026" selected>2026</option>
+                        <option value="2027">2027</option>
+                    </select>
+                </div>
 
-                <select
-                    name="ejercicio_fiscal"
-                    class="form-select"
-                    required
-                >
+                <div class="field">
+                    <label>Estatus del proyecto</label>
+                    <select name="estatus_proyecto" required>
+                        <option value="Planeacion" selected>Planeacion</option>
+                        <option value="Contratado">Contratado</option>
+                        <option value="En ejecucion">En ejecucion</option>
+                        <option value="Suspendido">Suspendido</option>
+                        <option value="Terminado">Terminado</option>
+                        <option value="En revision">En revision</option>
+                        <option value="Observado">Observado</option>
+                        <option value="Cerrado">Cerrado</option>
+                    </select>
+                </div>
 
-                    <option value="2025">2025</option>
-                    <option value="2026" selected>2026</option>
-                    <option value="2027">2027</option>
+                <div class="field full">
+                    <label>Nombre del proyecto</label>
+                    <input type="text" name="nombre" placeholder="Ej. Pavimentación Calle Hidalgo" required>
+                </div>
 
-                </select>
+                <div class="field">
+                    <label>Programa</label>
+                    <input type="text" name="programa" placeholder="Ej. Infraestructura 2026" required>
+                </div>
 
+                <div class="field">
+                    <label>Unidad administrativa</label>
+                    <input type="text" name="un_ad" placeholder="Ej. Obras Públicas" required>
+                </div>
+
+                <div class="field">
+                    <label>Localidad</label>
+                    <input type="text" name="localidad" placeholder="Ej. Puebla" required>
+                </div>
+
+                <div class="field">
+                    <label>Zona</label>
+                    <select name="tipo_zona" required>
+                        <option value="Urbana" selected>Urbana</option>
+                        <option value="Rural">Rural</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Inversión autorizada</label>
+                    <input type="number" name="inversion" step="0.01" placeholder="Ej. 1500000.50" required>
+                </div>
             </div>
+        </section>
 
-            <!-- NOMBRE -->
-            <label>Nombre del proyecto:</label>
-            <input type="text" name="nombre" placeholder="Ej. Pavimentación Calle Hidalgo" required>
-
-            <!-- PROGRAMA -->
-            <label>Programa:</label>
-            <input type="text" name="programa" placeholder="Ej. Infraestructura 2026" required>
-
-            <!-- UNIDAD -->
-            <label>Unidad Administrativa:</label>
-            <input type="text" name="un_ad" placeholder="Ej. Obras Públicas" required>
-
-            <!-- LOCALIDAD -->
-            <label>Localidad:</label>
-            <input type="text" name="localidad" placeholder="Ej. Puebla" required>
-
-            <!-- INVERSIÓN -->
-            <label>Inversión Autorizada:</label>
-            <input type="number" name="inversion" step="0.01" placeholder="Ej. 1500000.50" required>
-
-            <label>Estatus del proyecto:</label>
-            <select name="estatus_proyecto" required>
-                <option value="Planeacion" selected>Planeacion</option>
-                <option value="Contratado">Contratado</option>
-                <option value="En ejecucion">En ejecucion</option>
-                <option value="Suspendido">Suspendido</option>
-                <option value="Terminado">Terminado</option>
-                <option value="En revision">En revision</option>
-                <option value="Observado">Observado</option>
-                <option value="Cerrado">Cerrado</option>
-            </select>
-
-            <!-- BOTONES -->
-            <div class="botones">
-                <button type="submit" class="btn guardar">💾 Guardar</button>
-                <a href="/" class="btn cancelar">Cancelar</a>
-            </div>
-
-        </form>
-
-    </div>
-</div>
+        <div class="actions">
+            <a href="/" class="btn cancelar">Cancelar</a>
+            <button type="submit" class="btn guardar">Guardar proyecto</button>
+        </div>
+    </form>
+</main>
 
 </body>
 </html>

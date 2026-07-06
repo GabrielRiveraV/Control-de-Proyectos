@@ -28,44 +28,61 @@ def inicio():
     conexion = conectar_db()
     cursor = conexion.cursor(dictionary=True)
 
-    busqueda = request.args.get('busqueda')
+    busqueda = (request.args.get('busqueda') or '').strip()
+    ejercicio_fiscal = request.args.get('ejercicio_fiscal') or ''
+    tipo_zona = request.args.get('tipo_zona') or ''
+    programa_filtro = request.args.get('programa') or ''
+    estatus_proyecto = request.args.get('estatus_proyecto') or ''
     pagina = request.args.get('pagina', 1, type=int)
 
     por_pagina = 15
 
     offset = (pagina - 1) * por_pagina
 
+    filtros = []
+    valores = []
+
     if busqueda:
+        filtros.append("(nombre LIKE %s OR programa LIKE %s)")
+        valores.extend((f"%{busqueda}%", f"%{busqueda}%"))
 
-        cursor.execute("""
+    if ejercicio_fiscal:
+        filtros.append("ejercicio_fiscal = %s")
+        valores.append(ejercicio_fiscal)
+
+    if tipo_zona:
+        filtros.append("tipo_zona = %s")
+        valores.append(tipo_zona)
+
+    if programa_filtro:
+        filtros.append("programa = %s")
+        valores.append(programa_filtro)
+
+    if estatus_proyecto:
+        filtros.append("estatus_proyecto = %s")
+        valores.append(estatus_proyecto)
+
+    where_sql = f"WHERE {' AND '.join(filtros)}" if filtros else ""
+
+    cursor.execute(
+        f"""
             SELECT COUNT(*) AS total
             FROM proyectos
-            WHERE nombre LIKE %s
-            OR programa LIKE %s
+            {where_sql}
         """,
-        (
-            f"%{busqueda}%",
-            f"%{busqueda}%"
-        ))
+        valores
+    )
 
-    else:
-
-        cursor.execute("""
-            SELECT COUNT(*) AS total
-            FROM proyectos
-        """)
-    
     total_registros = cursor.fetchone()['total']
 
-    if busqueda:
-
-        query = """
+    query = f"""
         SELECT 
             p.id_proyecto, 
             p.nombre, 
             p.programa, 
             p.un_ad, 
             p.localidad, 
+            p.tipo_zona,
             p.inversion_autorizada,
             p.ejercicio_fiscal,
             p.estatus_proyecto,
@@ -91,8 +108,7 @@ def inicio():
         LEFT JOIN visitas v 
             ON c.id_contrato = v.id_contrato
 
-        WHERE p.nombre LIKE %s 
-        OR p.programa LIKE %s
+        {where_sql.replace('nombre', 'p.nombre').replace('programa', 'p.programa').replace('ejercicio_fiscal', 'p.ejercicio_fiscal').replace('tipo_zona', 'p.tipo_zona').replace('estatus_proyecto', 'p.estatus_proyecto')}
 
         GROUP BY 
             p.id_proyecto,
@@ -100,6 +116,7 @@ def inicio():
             p.programa,
             p.un_ad,
             p.localidad,
+            p.tipo_zona,
             p.inversion_autorizada,
             p.ejercicio_fiscal,
             p.estatus_proyecto,
@@ -115,72 +132,10 @@ def inicio():
         LIMIT %s, %s
         """
 
-        cursor.execute(
-            query,
-            (
-                f"%{busqueda}%",
-                f"%{busqueda}%",
-            offset,
-            por_pagina
-            )
-        )
-
-    else:
-
-        cursor.execute("""
-            SELECT
-                p.id_proyecto,
-                p.nombre,
-                p.programa,
-                p.un_ad,
-                p.localidad,
-                p.inversion_autorizada,
-                p.ejercicio_fiscal,
-                p.estatus_proyecto,
-
-                c.no_contrato,
-                c.estatus_contrato,
-
-                COUNT(v.id_visita) as total_visitas,
-
-                CASE
-                    WHEN c.id_contrato IS NOT NULL THEN 1
-                    ELSE 0
-                END as tiene_contrato,
-
-                c.archivo_contrato,
-                c.id_contrato
-
-            FROM proyectos p
-
-            LEFT JOIN contratos c
-                ON p.id_proyecto = c.id_proyecto
-
-            LEFT JOIN visitas v
-                ON c.id_contrato = v.id_contrato
-
-            GROUP BY
-                p.id_proyecto,
-                p.nombre,
-                p.programa,
-                p.un_ad,
-                p.localidad,
-                p.inversion_autorizada,
-                p.ejercicio_fiscal,
-                p.estatus_proyecto,
-                c.no_contrato,
-                c.estatus_contrato,
-                c.id_contrato,
-                c.archivo_contrato
-
-            ORDER BY p.ejercicio_fiscal DESC,
-                    p.id_proyecto DESC
-
-            LIMIT %s, %s
-        """, (
-    offset,
-    por_pagina
-))
+    cursor.execute(
+        query,
+        valores + [offset, por_pagina]
+    )
 
     proyectos = cursor.fetchall()
     
@@ -199,6 +154,16 @@ def inicio():
 
     cursor.execute("SELECT COUNT(*) AS total FROM visitas")
     total_visitas = cursor.fetchone()['total']
+
+    cursor.execute("""
+        SELECT
+            SUM(CASE WHEN tipo_zona = 'Urbana' THEN 1 ELSE 0 END) AS urbanas,
+            SUM(CASE WHEN tipo_zona = 'Rural' THEN 1 ELSE 0 END) AS rurales
+        FROM proyectos
+    """)
+    zonas = cursor.fetchone()
+    total_urbanas = zonas['urbanas'] or 0
+    total_rurales = zonas['rurales'] or 0
 
     # 🔹 GRÁFICA 1
     cursor.execute("""
@@ -228,6 +193,41 @@ def inicio():
     programas = [fila['programa'] for fila in datos2]
     totales_programas = [fila['total'] for fila in datos2]
 
+    cursor.execute("""
+        SELECT DISTINCT ejercicio_fiscal
+        FROM proyectos
+        WHERE ejercicio_fiscal IS NOT NULL
+        ORDER BY ejercicio_fiscal DESC
+    """)
+    ejercicios_disponibles = [fila['ejercicio_fiscal'] for fila in cursor.fetchall()]
+
+    cursor.execute("""
+        SELECT DISTINCT programa
+        FROM proyectos
+        WHERE programa IS NOT NULL AND programa <> ''
+        ORDER BY programa
+    """)
+    programas_disponibles = [fila['programa'] for fila in cursor.fetchall()]
+
+    estatus_disponibles = [
+        'Planeacion',
+        'Contratado',
+        'En ejecucion',
+        'Suspendido',
+        'Terminado',
+        'En revision',
+        'Observado',
+        'Cerrado'
+    ]
+
+    filtros_actuales = {
+        'busqueda': busqueda,
+        'ejercicio_fiscal': ejercicio_fiscal,
+        'tipo_zona': tipo_zona,
+        'programa': programa_filtro,
+        'estatus_proyecto': estatus_proyecto
+    }
+
     # 🔹 Cerrar conexión
     conexion.close()
 
@@ -242,10 +242,16 @@ def inicio():
         total_proyectos=total_proyectos,
         total_contratos=total_contratos,
         total_visitas=total_visitas,
+        total_urbanas=total_urbanas,
+        total_rurales=total_rurales,
         meses=meses,
         totales_visitas=totales_visitas,
         programas=programas,
-        totales_programas=totales_programas
+        totales_programas=totales_programas,
+        ejercicios_disponibles=ejercicios_disponibles,
+        programas_disponibles=programas_disponibles,
+        estatus_disponibles=estatus_disponibles,
+        filtros_actuales=filtros_actuales
     )
     
     
@@ -270,6 +276,7 @@ def guardar_proyecto():
     programa = request.form['programa']
     un_ad = request.form['un_ad']
     localidad = request.form['localidad']
+    tipo_zona = request.form.get('tipo_zona') or 'Urbana'
     inversion = request.form['inversion']
     ejercicio_fiscal = request.form['ejercicio_fiscal']
     estatus_proyecto = request.form.get('estatus_proyecto') or 'Planeacion'
@@ -283,11 +290,12 @@ def guardar_proyecto():
             programa,
             un_ad,
             localidad,
+            tipo_zona,
             inversion_autorizada,
             ejercicio_fiscal,
             estatus_proyecto
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
     """
 
     valores = (
@@ -295,6 +303,7 @@ def guardar_proyecto():
         programa,
         un_ad,
         localidad,
+        tipo_zona,
         inversion,
         ejercicio_fiscal,
         estatus_proyecto
@@ -343,6 +352,7 @@ def actualizar_proyecto():
     programa = request.form['programa']
     un_ad = request.form['un_ad']
     localidad = request.form['localidad']
+    tipo_zona = request.form.get('tipo_zona') or 'Urbana'
     inversion = request.form['inversion']
     estatus_proyecto = request.form.get('estatus_proyecto') or 'Planeacion'
 
@@ -351,11 +361,11 @@ def actualizar_proyecto():
 
     sql = """
         UPDATE proyectos
-        SET nombre=%s, programa=%s, un_ad=%s, localidad=%s, inversion_autorizada=%s, estatus_proyecto=%s
+        SET nombre=%s, programa=%s, un_ad=%s, localidad=%s, tipo_zona=%s, inversion_autorizada=%s, estatus_proyecto=%s
         WHERE id_proyecto=%s
     """
 
-    valores = (nombre, programa, un_ad, localidad, inversion, estatus_proyecto, id)
+    valores = (nombre, programa, un_ad, localidad, tipo_zona, inversion, estatus_proyecto, id)
 
     cursor.execute(sql, valores)
     

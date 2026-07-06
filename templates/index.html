@@ -93,20 +93,32 @@ body {
 
 /* BUSCADOR */
 .buscador {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(210px, 1.3fr) repeat(4, minmax(140px, .8fr)) auto auto;
     gap: 10px;
+    margin-bottom: 18px;
 }
 
-.buscador input {
+.buscador input,
+.buscador select {
     padding: 8px;
     border-radius: 5px;
     border: 1px solid #ccc;
+    min-height: 40px;
+}
+
+.btn-clear {
+    background: #6c757d;
+}
+
+.btn-clear:hover {
+    background: #5a6268;
 }
 
 /* METRICAS */
 .metricas {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 15px;
     margin-bottom: 20px;
     padding: 5px;
@@ -274,10 +286,12 @@ tbody tr:hover {
     }
 
     .buscador {
-        width: 100%;
+        grid-template-columns: 1fr;
     }
 
-    .buscador input {
+    .buscador input,
+    .buscador select,
+    .buscador .btn-main {
         width: 100%;
     }
 }
@@ -336,23 +350,18 @@ tbody tr:hover {
     border-color: #1e88e5;
 }
 
-.barra-avance {
-    width: 140px;
-    height: 24px;
-    background: #e9ecef;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: inset 0 1px 4px rgba(0,0,0,.15);
-}
-
-.barra-avance-fill {
-    height: 100%;
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-    text-align: center;
-    line-height: 22px;
-    transition: width .4s ease;
+.visitas-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #eef2f6;
+    color: #26313d;
+    font-size: 14px;
+    font-weight: 800;
 }
 
 .badge-estatus {
@@ -426,22 +435,6 @@ tbody tr:hover {
     <!-- HEADER -->
     <div class="header">
 
-        <!-- BUSCADOR -->
-        <form method="GET" action="/" class="buscador">
-
-            <input 
-                type="text"
-                name="busqueda"
-                placeholder="Buscar proyecto..."
-                value="{{ request.args.get('busqueda', '') }}"
-            >
-
-            <button type="submit" class="btn-main">
-                <i class="bi bi-search"></i>
-            </button>
-
-        </form>
-
         <!-- TITULO -->
         <h1><i class="bi bi-bar-chart-line me-2"></i>Control de Proyectos</h1>
 
@@ -486,6 +479,13 @@ tbody tr:hover {
                     </a>
                 </li>
 
+                <li>
+                    <a href="{{ url_for('observaciones.index') }}" class="dropdown-item">
+                        <i class="bi bi-journal-check me-2"></i>
+                        Observaciones
+                    </a>
+                </li>
+
                 {% if current_user.rol == 'admin' %}
                 <li><hr class="dropdown-divider"></li>
                 <li>
@@ -501,6 +501,60 @@ tbody tr:hover {
         </div>
 
     </div>
+
+    <!-- FILTROS -->
+    <form method="GET" action="/" class="buscador">
+
+        <input
+            type="text"
+            name="busqueda"
+            placeholder="Buscar proyecto o programa..."
+            value="{{ filtros_actuales.busqueda }}"
+        >
+
+        <select name="ejercicio_fiscal">
+            <option value="">Todos los ejercicios</option>
+            {% for ejercicio in ejercicios_disponibles %}
+            <option value="{{ ejercicio }}" {% if filtros_actuales.ejercicio_fiscal|string == ejercicio|string %}selected{% endif %}>
+                {{ ejercicio }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <select name="tipo_zona">
+            <option value="">Todas las zonas</option>
+            <option value="Urbana" {% if filtros_actuales.tipo_zona == 'Urbana' %}selected{% endif %}>Urbana</option>
+            <option value="Rural" {% if filtros_actuales.tipo_zona == 'Rural' %}selected{% endif %}>Rural</option>
+        </select>
+
+        <select name="programa">
+            <option value="">Todos los programas</option>
+            {% for programa in programas_disponibles %}
+            <option value="{{ programa }}" {% if filtros_actuales.programa == programa %}selected{% endif %}>
+                {{ programa }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <select name="estatus_proyecto">
+            <option value="">Todos los estatus</option>
+            {% for estatus in estatus_disponibles %}
+            <option value="{{ estatus }}" {% if filtros_actuales.estatus_proyecto == estatus %}selected{% endif %}>
+                {{ estatus }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn-main">
+            <i class="bi bi-funnel-fill"></i>
+            Filtrar
+        </button>
+
+        <a href="/" class="btn-main btn-clear">
+            Limpiar
+        </a>
+
+    </form>
 
     {% if current_user.rol == 'admin' %}
 
@@ -522,6 +576,16 @@ tbody tr:hover {
             <h2>{{ total_visitas }}</h2>
         </div>
 
+        <div class="metrica">
+            <i class="bi bi-buildings-fill me-2 text-info"></i>Urbanas
+            <h2>{{ total_urbanas }}</h2>
+        </div>
+
+        <div class="metrica">
+            <i class="bi bi-tree-fill me-2 text-success"></i>Rurales
+            <h2>{{ total_rurales }}</h2>
+        </div>
+
     </div>
 
     {% endif %}
@@ -538,6 +602,7 @@ tbody tr:hover {
                     <th>Programa</th>
                     <th>Un. Adva.</th>
                     <th>Localidad</th>
+                    <th>Zona</th>
                     <th>Inversi&oacute;n</th>
                     <th>Ejercicio</th>
                     <th>Contrato</th>
@@ -566,6 +631,8 @@ tbody tr:hover {
                     <!-- LOCALIDAD -->
                     <td>{{ proyecto.localidad }}</td>
 
+                    <td>{{ proyecto.tipo_zona or 'Urbana' }}</td>
+
                     <!-- INVERSION -->
                     <td class="monto">
                         ${{ "{:,.2f}".format(proyecto.inversion_autorizada) }}
@@ -591,32 +658,9 @@ tbody tr:hover {
 
                     <!-- VISITAS -->
                     <td>
-
-                        {% set avance = proyecto.total_visitas * 10 if proyecto.total_visitas else 0 %}
-
-                        {% if avance < 30 %}
-                            {% set color = '#e74c3c' %}
-                        {% elif avance < 70 %}
-                            {% set color = '#f1c40f' %}
-                        {% else %}
-                            {% set color = '#2ecc71' %}
-                        {% endif %}
-
-                        <div class="barra-avance">
-
-                            <div
-                                class="barra-avance-fill"
-                                style="
-                                    width:{{ avance }}%;
-                                    background:{{ color }};
-                                ">
-
-                                {{ avance }}%
-
-                            </div>
-
-                        </div>
-
+                        <span class="visitas-count">
+                            {{ proyecto.total_visitas or 0 }}
+                        </span>
                     </td>
 
                     <!-- ACCIONES -->
@@ -793,7 +837,11 @@ tbody tr:hover {
                 <a class="page-link"
                 href="{{ url_for('proyectos.inicio',
                                     pagina=pagina-1,
-                                    busqueda=busqueda) }}">
+                                    busqueda=filtros_actuales.busqueda,
+                                    ejercicio_fiscal=filtros_actuales.ejercicio_fiscal,
+                                    tipo_zona=filtros_actuales.tipo_zona,
+                                    programa=filtros_actuales.programa,
+                                    estatus_proyecto=filtros_actuales.estatus_proyecto) }}">
 
                     Anterior
 
@@ -810,7 +858,11 @@ tbody tr:hover {
                 <a class="page-link"
                 href="{{ url_for('proyectos.inicio',
                                     pagina=p,
-                                    busqueda=busqueda) }}">
+                                    busqueda=filtros_actuales.busqueda,
+                                    ejercicio_fiscal=filtros_actuales.ejercicio_fiscal,
+                                    tipo_zona=filtros_actuales.tipo_zona,
+                                    programa=filtros_actuales.programa,
+                                    estatus_proyecto=filtros_actuales.estatus_proyecto) }}">
 
                     {{ p }}
 
@@ -827,7 +879,11 @@ tbody tr:hover {
                 <a class="page-link"
                 href="{{ url_for('proyectos.inicio',
                                     pagina=pagina+1,
-                                    busqueda=busqueda) }}">
+                                    busqueda=filtros_actuales.busqueda,
+                                    ejercicio_fiscal=filtros_actuales.ejercicio_fiscal,
+                                    tipo_zona=filtros_actuales.tipo_zona,
+                                    programa=filtros_actuales.programa,
+                                    estatus_proyecto=filtros_actuales.estatus_proyecto) }}">
 
                     Siguiente
 

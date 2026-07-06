@@ -54,8 +54,11 @@ tr:hover { background-color: #f5f9ff; }
                 </td>
                 <td>
                     <div class="acciones">
-                        {% if current_user.rol == 'supervisor' %}
+                        {% if current_user.rol in ['admin', 'supervisor'] %}
                         <a href="{{ url_for('actas.expediente_acta', id_visita=v[0]) }}" class="btn-small">Generar acta</a>
+                        {% endif %}
+                        {% if current_user.rol == 'supervisor' %}
+                        <a href="{{ url_for('observaciones.nueva', id_visita=v[0]) }}" class="btn-small">Crear observacion</a>
                         <form method="POST" action="{{ url_for('visitas.subir_acta', id_visita=v[0]) }}" enctype="multipart/form-data">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <label class="btn-small" title="Subir acta firmada">
@@ -63,6 +66,9 @@ tr:hover { background-color: #f5f9ff; }
                                 <input type="file" name="archivo_acta" accept=".pdf,.xlsx,.xls" onchange="this.form.submit()" hidden>
                             </label>
                         </form>
+                        {% endif %}
+                        {% if current_user.rol in ['admin', 'jefe'] %}
+                        <a href="{{ url_for('observaciones.nueva', id_visita=v[0]) }}" class="btn-small">Crear observacion</a>
                         {% endif %}
                         {% if current_user.rol == 'admin' %}
                         <form method="POST" action="{{ url_for('visitas.eliminar_visita', id_visita=v[0]) }}" onsubmit="return confirm('¿Eliminar esta visita?')">

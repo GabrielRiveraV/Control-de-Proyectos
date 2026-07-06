@@ -131,6 +131,61 @@ body {
     color: #78838d;
 }
 
+.observaciones-panel {
+    background: white;
+    border: 1px solid #dde3ea;
+    border-radius: 8px;
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.observaciones-panel h2 {
+    font-size: 18px;
+    margin: 0 0 14px;
+    font-weight: 750;
+}
+
+.obs-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.obs-kpi {
+    border: 1px solid #e1e6eb;
+    border-radius: 8px;
+    padding: 13px;
+    background: #f8fafc;
+}
+
+.obs-kpi span {
+    color: #65717d;
+    display: block;
+    font-size: 12px;
+    font-weight: 750;
+    text-transform: uppercase;
+}
+
+.obs-kpi strong {
+    display: block;
+    font-size: 25px;
+    line-height: 1.1;
+    margin-top: 5px;
+}
+
+.obs-alerta strong {
+    color: #705400;
+}
+
+.obs-riesgo strong {
+    color: #8a1f2d;
+}
+
+.obs-ok strong {
+    color: #17633a;
+}
+
 .grid {
     display: grid;
     grid-template-columns: 1.15fr .85fr;
@@ -260,7 +315,8 @@ td {
 
 @media (max-width: 1100px) {
     .kpis,
-    .grid {
+    .grid,
+    .obs-grid {
         grid-template-columns: 1fr;
     }
 }
@@ -290,7 +346,7 @@ td {
         <img src="{{ url_for('static', filename='img/logo_centro.png') }}" alt="Centro">
         <div>
             <div class="brand-title">Dashboard Ejecutivo</div>
-            <div class="brand-subtitle">Contraloria Municipal | Fiscalizacion de Obra Publica</div>
+            <div class="brand-subtitle">Contraloría Municipal | Fiscalización de Obra Pública</div>
         </div>
     </div>
 
@@ -337,6 +393,64 @@ td {
             <strong>${{ "{:,.2f}".format(resumen.monto_contratado_total) }}</strong>
             <small>Contratos registrados</small>
         </div>
+    </section>
+
+    <section class="observaciones-panel">
+        <h2>Observaciones</h2>
+        <div class="obs-grid">
+            <div class="obs-kpi">
+                <span>Abiertas</span>
+                <strong>{{ observaciones_resumen.abiertas or 0 }}</strong>
+            </div>
+            <div class="obs-kpi obs-riesgo">
+                <span>Alta prioridad</span>
+                <strong>{{ observaciones_resumen.alta_prioridad or 0 }}</strong>
+            </div>
+            <div class="obs-kpi obs-alerta">
+                <span>Vencidas</span>
+                <strong>{{ observaciones_resumen.vencidas or 0 }}</strong>
+            </div>
+            <div class="obs-kpi obs-ok">
+                <span>Solventadas / cerradas</span>
+                <strong>{{ observaciones_resumen.solventadas or 0 }}</strong>
+            </div>
+        </div>
+
+        {% if observaciones_urgentes %}
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Proyecto</th>
+                        <th>Observacion</th>
+                        <th>Prioridad</th>
+                        <th>Estatus</th>
+                        <th>Compromiso</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in observaciones_urgentes %}
+                    {% set clase = 'riesgo' if item.prioridad in ['Critica', 'Alta'] else 'alerta' %}
+                    <tr>
+                        <td>{{ item.proyecto }}</td>
+                        <td><strong>{{ item.titulo }}</strong></td>
+                        <td><span class="badge-condicion {{ clase }}">{{ item.prioridad }}</span></td>
+                        <td>{{ item.estatus }}</td>
+                        <td>{{ item.fecha_compromiso or 'Sin fecha' }}</td>
+                        <td>
+                            <a href="{{ url_for('observaciones.detalle', id_observacion=item.id_observacion) }}" class="btn btn-sm btn-outline-primary">
+                                Ver
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty">No hay observaciones pendientes de atencion.</div>
+        {% endif %}
     </section>
 
     <section class="grid">

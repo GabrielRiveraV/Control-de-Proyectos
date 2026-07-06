@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Observacion</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+body { background: #eef2f7; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+.page { width: min(980px, calc(100% - 32px)); margin: 30px auto; }
+.panel { background: white; border: 1px solid #dfe5eb; border-radius: 8px; padding: 22px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+label { font-weight: 700; margin-bottom: 5px; }
+.btn-main { background: #1e88e5; color: white; border: none; border-radius: 6px; padding: 9px 14px; text-decoration: none; font-weight: 700; }
+.btn-muted { background: #5f6b76; }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<main class="page">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0">Nueva observacion formal</h1>
+        <a href="{{ url_for('observaciones.index') }}" class="btn-main btn-muted">Volver</a>
+    </div>
+
+    <form class="panel" method="POST" action="{{ url_for('observaciones.guardar') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="id_visita" value="{{ contexto.id_visita if contexto and contexto.id_visita else '' }}">
+
+        {% if contexto %}
+            <input type="hidden" name="id_proyecto" value="{{ contexto.id_proyecto }}">
+            <input type="hidden" name="id_contrato" value="{{ contexto.id_contrato or '' }}">
+            <div class="alert alert-info">
+                <strong>Origen:</strong> {{ contexto.proyecto }}
+                {% if contexto.no_contrato %} | Contrato {{ contexto.no_contrato }}{% endif %}
+                {% if contexto.fecha_visita %} | Visita {{ contexto.fecha_visita }}{% endif %}
+            </div>
+        {% else %}
+            <div class="mb-3">
+                <label>Proyecto / contrato</label>
+                <select class="form-select" name="id_proyecto" required onchange="document.getElementById('id_contrato').value=this.options[this.selectedIndex].dataset.contrato || ''">
+                    <option value="">Seleccione...</option>
+                    {% for p in proyectos %}
+                    <option value="{{ p.id_proyecto }}" data-contrato="{{ p.id_contrato or '' }}">
+                        {{ p.nombre }}{% if p.no_contrato %} | {{ p.no_contrato }}{% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+                <input type="hidden" name="id_contrato" id="id_contrato">
+            </div>
+        {% endif %}
+
+        <div class="mb-3">
+            <label>Titulo</label>
+            <input class="form-control" name="titulo" maxlength="180" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Descripcion</label>
+            <textarea class="form-control" name="descripcion" rows="5" required>{% if contexto and contexto.observaciones_visita %}{{ contexto.observaciones_visita }}{% endif %}</textarea>
+        </div>
+
+        <div class="grid">
+            <div>
+                <label>Tipo</label>
+                <select class="form-select" name="tipo" required>
+                    {% for item in tipos %}
+                    <option value="{{ item }}">{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Prioridad</label>
+                <select class="form-select" name="prioridad" required>
+                    {% for item in prioridades %}
+                    <option value="{{ item }}" {% if item == 'Media' %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Responsable</label>
+                <input class="form-control" name="responsable">
+            </div>
+            <div>
+                <label>Fecha compromiso</label>
+                <input class="form-control" type="date" name="fecha_compromiso">
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-end gap-2">
+            <a href="{{ url_for('observaciones.index') }}" class="btn-main btn-muted">Cancelar</a>
+            <button type="submit" class="btn-main">Guardar observacion</button>
+        </div>
+    </form>
+</main>
+</body>
+</html>

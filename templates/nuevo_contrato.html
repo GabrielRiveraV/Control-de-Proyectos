@@ -1,179 +1,284 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
+
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nuevo Contrato</title>
 
     <style>
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #eef2f7;
-    margin: 0;
-}
+        :root {
+            --bg: #f3f6fa;
+            --card: #ffffff;
+            --text: #1f2937;
+            --muted: #667085;
+            --line: #d9e2ec;
+            --primary: #0f5b99;
+            --primary-dark: #0b4778;
+        }
 
-.container {
-    width: 40%;
-    margin: 40px auto;
-}
+        * {
+            box-sizing: border-box;
+        }
 
-.card {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
-}
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+        }
 
-h2 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #2c3e50;
-}
+        .page {
+            margin: 0 auto;
+            max-width: 980px;
+            padding: 36px 20px;
+        }
 
-label {
-    font-weight: bold;
-    display: block;
-    margin-top: 12px;
-}
+        .page-header {
+            margin-bottom: 18px;
+        }
 
-input, select {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    transition: 0.2s;
-    font-size: 14px;
-}
+        .eyebrow {
+            color: var(--primary);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: .04em;
+            margin: 0 0 6px;
+            text-transform: uppercase;
+        }
 
-input:focus, select:focus {
-    border-color: #1e88e5;
-    outline: none;
-}
+        h1 {
+            font-size: 28px;
+            margin: 0;
+        }
 
-/* PROYECTO BLOQUEADO */
-.proyecto-fijo {
-    background: #f4f6f9;
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid #ddd;
-    margin-top: 5px;
-}
+        .subtitle {
+            color: var(--muted);
+            font-size: 15px;
+            margin: 8px 0 0;
+        }
 
-/* BOTONES */
-.botones {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: 0 12px 28px rgba(16, 24, 40, .08);
+            overflow: hidden;
+        }
 
-.btn {
-    padding: 10px 15px;
-    border-radius: 6px;
-    text-decoration: none;
-    color: white;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-}
+        .section {
+            border-bottom: 1px solid var(--line);
+            padding: 24px;
+        }
 
-.guardar {
-    background-color: #28a745;
-}
+        .section:last-of-type {
+            border-bottom: 0;
+        }
 
-.guardar:hover {
-    background-color: #218838;
-}
+        .section-title {
+            font-size: 16px;
+            margin: 0 0 18px;
+        }
 
-.cancelar {
-    background-color: #e74c3c;
-}
+        .form-grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
 
-.cancelar:hover {
-    background-color: #c0392b;
-}
+        .field.full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            color: #344054;
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        input,
+        select {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 15px;
+            min-height: 42px;
+            outline: none;
+            padding: 10px 12px;
+            transition: border-color .15s ease, box-shadow .15s ease;
+            width: 100%;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(15, 91, 153, .14);
+        }
+
+        .readonly-box {
+            background: #f8fafc;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            color: #344054;
+            min-height: 42px;
+            padding: 10px 12px;
+        }
+
+        .file-note {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .actions {
+            align-items: center;
+            background: #f8fafc;
+            border-top: 1px solid var(--line);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding: 18px 24px;
+        }
+
+        .btn {
+            align-items: center;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            font-size: 15px;
+            font-weight: 700;
+            height: 42px;
+            justify-content: center;
+            min-width: 138px;
+            padding: 0 18px;
+            text-decoration: none;
+        }
+
+        .guardar {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .guardar:hover {
+            background: var(--primary-dark);
+        }
+
+        .cancelar {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: #344054;
+        }
+
+        .cancelar:hover {
+            background: #f1f5f9;
+        }
+
+        @media (max-width: 720px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                align-items: stretch;
+                flex-direction: column-reverse;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 
 <body>
 
-<div class="container">
-    <div class="card">
+<main class="page">
+    <header class="page-header">
+        <p class="eyebrow">Control contractual</p>
+        <h1>Registrar contrato</h1>
+        <p class="subtitle">Captura los datos principales del contrato asociado al proyecto.</p>
+    </header>
 
-        <h2>📄 Registrar Contrato</h2>
-
-        <form
-            action="/guardar_contrato"
-            method="POST"
-            enctype="multipart/form-data">
+    <form action="/guardar_contrato" method="POST" enctype="multipart/form-data" class="card">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <!-- PROYECTO -->
-            <label>Proyecto:</label>
+        <section class="section">
+            <h2 class="section-title">Proyecto asociado</h2>
 
-            {% if proyecto_seleccionado %}
-                
-                <!-- Campo oculto (IMPORTANTÍSIMO) -->
-                <input type="hidden" name="id_proyecto" value="{{ proyecto_seleccionado[0] }}">
+            <div class="form-grid">
+                <div class="field full">
+                    <label>Proyecto</label>
 
-                <!-- Visual -->
-                <div class="proyecto-fijo">
-                    📁 {{ proyecto_seleccionado[1] }}
+                    {% if proyecto_seleccionado %}
+                        <input type="hidden" name="id_proyecto" value="{{ proyecto_seleccionado[0] }}">
+                        <div class="readonly-box">{{ proyecto_seleccionado[1] }}</div>
+                    {% else %}
+                        <select name="id_proyecto" required>
+                            {% for proyecto in proyectos %}
+                                <option value="{{ proyecto[0] }}">
+                                    {{ proyecto[1] }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Datos del contrato</h2>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label>No. contrato</label>
+                    <input type="text" name="no_contrato" placeholder="Ej. CO-12345" required>
                 </div>
 
-            {% else %}
+                <div class="field">
+                    <label>Fecha</label>
+                    <input type="date" name="fecha" required>
+                </div>
 
-                <select name="id_proyecto" required>
-                    {% for proyecto in proyectos %}
-                        <option value="{{ proyecto[0] }}">
-                            {{ proyecto[1] }}
-                        </option>
-                    {% endfor %}
-                </select>
+                <div class="field full">
+                    <label>Contratista</label>
+                    <input type="text" name="contratista" placeholder="Nombre del contratista" required>
+                </div>
 
-            {% endif %}
+                <div class="field">
+                    <label>Monto</label>
+                    <input type="number" name="monto" step="0.01" placeholder="Ej. 150000.50" required>
+                </div>
 
-            <!-- NO CONTRATO -->
-            <label>No. Contrato:</label>
-            <input type="text" name="no_contrato" placeholder="Ej. CO-12345" required>
+                <div class="field">
+                    <label>Estatus del contrato</label>
+                    <select name="estatus_contrato" required>
+                        <option value="En ejecucion" selected>En ejecucion</option>
+                        <option value="Suspendido">Suspendido</option>
+                        <option value="Terminado">Terminado</option>
+                        <option value="En revision">En revision</option>
+                        <option value="Observado">Observado</option>
+                        <option value="Cerrado">Cerrado</option>
+                    </select>
+                </div>
 
-            <!-- FECHA -->
-            <label>Fecha:</label>
-            <input type="date" name="fecha" required>
-
-            <!-- CONTRATISTA -->
-            <label>Contratista:</label>
-            <input type="text" name="contratista" placeholder="Nombre del contratista" required>
-
-            <label>Monto:</label>
-            <input type="number" name="monto" step="0.01" placeholder="Ej. 150000.50" required>
-
-            <label>Estatus del contrato:</label>
-            <select name="estatus_contrato" required>
-                <option value="En ejecucion" selected>En ejecucion</option>
-                <option value="Suspendido">Suspendido</option>
-                <option value="Terminado">Terminado</option>
-                <option value="En revision">En revision</option>
-                <option value="Observado">Observado</option>
-                <option value="Cerrado">Cerrado</option>
-            </select>
-
-            <label>Contrato PDF:</label>
-            <input
-                type="file"
-                name="archivo_contrato"
-                accept=".pdf"
-                class="form-control"
-            >
-
-            <!-- BOTONES -->
-            <div class="botones">
-                <button type="submit" class="btn guardar">💾 Guardar</button>
-                <a href="/" class="btn cancelar">Cancelar</a>
+                <div class="field full">
+                    <label>Contrato PDF</label>
+                    <input type="file" name="archivo_contrato" accept=".pdf">
+                    <div class="file-note">Formato permitido: PDF.</div>
+                </div>
             </div>
+        </section>
 
-        </form>
-
-    </div>
-</div>
+        <div class="actions">
+            <a href="/" class="btn cancelar">Cancelar</a>
+            <button type="submit" class="btn guardar">Guardar contrato</button>
+        </div>
+    </form>
+</main>
 
 </body>
 </html>

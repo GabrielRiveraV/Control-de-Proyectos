@@ -8,7 +8,7 @@ from mysql.connector import Error as MySQLError
 from werkzeug.utils import secure_filename
 
 from database import conectar_db
-from routes.permisos import solo_supervisor
+from routes.permisos import solo_admin_o_supervisor
 from utils.auditoria import registrar_auditoria
 
 
@@ -190,7 +190,7 @@ def obtener_detalles(cursor, id_acta):
 
 @actas_bp.route('/expediente/<int:id_visita>', methods=['GET', 'POST'])
 @login_required
-@solo_supervisor
+@solo_admin_o_supervisor
 def expediente_acta(id_visita):
     conexion = conectar_db()
     cursor = conexion.cursor(dictionary=True)
@@ -393,7 +393,7 @@ def expediente_acta(id_visita):
 
 @actas_bp.route('/imprimir/<int:id_visita>')
 @login_required
-@solo_supervisor
+@solo_admin_o_supervisor
 def imprimir_acta(id_visita):
     conexion = conectar_db()
     cursor = conexion.cursor(dictionary=True)

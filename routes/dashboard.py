@@ -184,9 +184,53 @@ def ejecutivo():
     """)
     semaforo = cursor.fetchone()
 
+    cursor.execute("""
+        SELECT
+            COUNT(*) AS total,
+            SUM(CASE WHEN estatus IN ('Abierta', 'En seguimiento') THEN 1 ELSE 0 END) AS abiertas,
+            SUM(CASE WHEN prioridad IN ('Alta', 'Critica') AND estatus NOT IN ('Cerrada', 'Solventada') THEN 1 ELSE 0 END) AS alta_prioridad,
+            SUM(CASE WHEN fecha_compromiso < CURDATE() AND estatus NOT IN ('Cerrada', 'Solventada') THEN 1 ELSE 0 END) AS vencidas,
+            SUM(CASE WHEN estatus IN ('Solventada', 'Cerrada') THEN 1 ELSE 0 END) AS solventadas
+        FROM observaciones
+    """)
+    observaciones_resumen = cursor.fetchone()
+
+    cursor.execute("""
+        SELECT
+            o.id_observacion,
+            o.titulo,
+            o.prioridad,
+            o.estatus,
+            o.fecha_compromiso,
+            p.nombre AS proyecto
+        FROM observaciones o
+        INNER JOIN proyectos p
+            ON o.id_proyecto = p.id_proyecto
+        WHERE o.estatus NOT IN ('Cerrada', 'Solventada')
+        ORDER BY
+            CASE
+                WHEN o.fecha_compromiso < CURDATE() THEN 1
+                ELSE 2
+            END,
+            CASE o.prioridad
+                WHEN 'Critica' THEN 1
+                WHEN 'Alta' THEN 2
+                WHEN 'Media' THEN 3
+                ELSE 4
+            END,
+            o.fecha_compromiso ASC,
+            o.created_at DESC
+        LIMIT 5
+    """)
+    observaciones_urgentes = cursor.fetchall()
+
     conexion.close()
 
     semaforo = {clave: numero(valor) for clave, valor in semaforo.items()}
+    observaciones_resumen = {
+        clave: numero(valor)
+        for clave, valor in observaciones_resumen.items()
+    }
 
     return render_template(
         'dashboard_ejecutivo.html',
@@ -197,6 +241,8 @@ def ejecutivo():
         visitas_mes=visitas_mes,
         atencion=atencion,
         semaforo=semaforo,
+        observaciones_resumen=observaciones_resumen,
+        observaciones_urgentes=observaciones_urgentes,
         chart_estatus_contratos={
             'labels': [fila['estatus'] for fila in estatus_contratos],
             'data': [fila['total'] for fila in estatus_contratos]

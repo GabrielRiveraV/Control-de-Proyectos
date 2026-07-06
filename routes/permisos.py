@@ -17,6 +17,19 @@ def solo_supervisor(f):
     return decorated_function
 
 
+def solo_admin_o_supervisor(f):
+
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+
+        if current_user.rol not in ('admin', 'supervisor'):
+            abort(403)
+
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
 def solo_admin_o_jefe(f):
 
     @wraps(f)
